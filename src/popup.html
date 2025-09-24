@@ -64,6 +64,9 @@
         border-radius: 3px;
         font-size: 14px;
       }
+      .setting-interval {
+        margin-bottom: 8px;
+      }
       .info {
         background-color: #f8f9fa;
         padding: 10px;
@@ -114,7 +117,7 @@
         </select>
       </div>
 
-      <div class="setting-item">
+      <div class="setting-interval">
         <label>
           <input type="checkbox" id="enable-overtime-notifications" />
           超過勤務の通知を有効にする
@@ -122,7 +125,6 @@
       </div>
 
       <div class="setting-item" id="overtime-interval-setting">
-        <label for="overtime-interval">通知間隔:</label>
         <select id="overtime-interval">
           <option value="15">15分ごと</option>
           <option value="30" selected>30分ごと</option>

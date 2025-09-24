@@ -207,6 +207,8 @@ class NotificationManager {
               iconUrl: chrome.runtime.getURL("icons/icon48.png"),
               requireInteraction: false,
             });
+          } else {
+            console.log("超過時間が0分以下のため通知をスキップしました");
           }
         }
       });
@@ -368,8 +370,15 @@ class NotificationManager {
     // 前日のアラームをすべてクリア
     this.clearAllAlarms();
 
-    // 前日の勤務日データをクリア
-    chrome.storage.local.remove(["currentWorkDate"]);
+    // 前日の勤務日データと作業データをクリア
+    const today = this.getTodayDateString();
+    const yesterday = this.getYesterdayDateString();
+
+    chrome.storage.local.remove([
+      "currentWorkDate",
+      `workData_${yesterday}`,
+      "completionTimeForOvertime"
+    ]);
 
     console.log("前日のアラームと設定をクリアしました");
   }
@@ -380,6 +389,16 @@ class NotificationManager {
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, "0");
     const day = now.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  // 昨日の日付文字列を取得 (YYYY-MM-DD形式)
+  getYesterdayDateString() {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const year = yesterday.getFullYear();
+    const month = (yesterday.getMonth() + 1).toString().padStart(2, "0");
+    const day = yesterday.getDate().toString().padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
 
@@ -420,6 +439,3 @@ class NotificationManager {
 
 // バックグラウンドスクリプト初期化
 const notificationManager = new NotificationManager();
-
-// グローバルスコープに保存（デバッグ用）
-globalThis.notificationManagerInstance = notificationManager;

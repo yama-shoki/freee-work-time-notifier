@@ -157,7 +157,12 @@ class FreeeNotificationManager {
         breakEnd = currentMinutes;
       }
 
-      totalBreakMinutes += breakEnd - breakStart;
+      // 負の休憩時間を防ぐ
+      if (breakEnd > breakStart) {
+        totalBreakMinutes += breakEnd - breakStart;
+      } else {
+        console.warn("無効な休憩時間を検出:", breakPeriod);
+      }
     });
 
     // 実勤務時間を計算
@@ -192,7 +197,7 @@ class FreeeNotificationManager {
         overtimeMinutes: overtimeMinutes,
         message: `8時間勤務完了済み（${Math.floor(overtimeMinutes / 60)}時間${
           overtimeMinutes % 60
-        }分超過）正確な時間は「修正」ボタンを再度クリック`,
+        }分超過）`,
       };
     } else {
       // まだ8時間未完了
@@ -221,7 +226,6 @@ class FreeeNotificationManager {
     const dataWithDate = {
       ...completionInfo,
       workDate: today,
-      savedAt: now.toISOString(), // JST時刻で保存
     };
 
     if (
@@ -328,25 +332,29 @@ class FreeeNotificationManager {
           // まだ完了時刻前
           updatedData.message = `8時間完了予定: ${
             storedData.completionTime
-          } (残り${Math.floor(remainingMinutes / 60)}時間${
+          } (残り約${Math.floor(remainingMinutes / 60)}時間${
             remainingMinutes % 60
-          }分)`;
+          }分) ※正確な時間と現在のステータスは「修正」ボタンで確認`;
           updatedData.remainingMinutes = remainingMinutes;
         } else {
           // 完了時刻を過ぎている - 超過勤務状態（但し勤務中）
           const overtimeMinutes = currentMinutes - completionMinutes;
           updatedData.status = "completed";
-          updatedData.message = `8時間勤務完了済み（${Math.floor(
+          updatedData.message = `8時間勤務完了済み（約${Math.floor(
             overtimeMinutes / 60
-          )}時間${overtimeMinutes % 60}分超過）`;
+          )}時間${
+            overtimeMinutes % 60
+          }分超過） ※正確な時間と現在のステータスは「修正」ボタンで確認`;
           updatedData.overtimeMinutes = overtimeMinutes;
         }
       } else if (storedData.status === "completed") {
         // 既に完了済みで勤務中の場合、超過時間を再計算
         const overtimeMinutes = currentMinutes - completionMinutes;
-        updatedData.message = `8時間勤務完了済み（${Math.floor(
+        updatedData.message = `8時間勤務完了済み（約${Math.floor(
           overtimeMinutes / 60
-        )}時間${overtimeMinutes % 60}分超過）`;
+        )}時間${
+          overtimeMinutes % 60
+        }分超過） ※正確な時間と現在のステータスは「修正」ボタンで確認`;
         updatedData.overtimeMinutes = overtimeMinutes;
       }
     }

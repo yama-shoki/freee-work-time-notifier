@@ -175,22 +175,15 @@ class FreeeNotificationManager {
         currentMinutes + remainingMinutes
       );
 
-      return {
-        status: "pending",
-        completionTime: completionTime,
-        actualWorkMinutes: actualWorkMinutes,
-        remainingMinutes: remainingMinutes,
-        notification10min: this.minutesToTime(
-          currentMinutes + remainingMinutes - 10
-        ),
-        notification1min: this.minutesToTime(
-          currentMinutes + remainingMinutes - 1
-        ),
-        message: `8時間完了予定: ${completionTime} (残り${Math.floor(
-          remainingMinutes / 60
-        )}時間${remainingMinutes % 60}分)`,
-      };
-    }
+              return {
+              status: "pending",
+              completionTime: completionTime,
+              actualWorkMinutes: actualWorkMinutes,
+              remainingMinutes: remainingMinutes,
+              message: `8時間完了予定: ${completionTime} (残り${Math.floor(
+                remainingMinutes / 60
+              )}時間${remainingMinutes % 60}分)`,
+            };    }
   }
 
   // バックグラウンドスクリプトに通知データを送信

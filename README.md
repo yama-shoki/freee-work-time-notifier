@@ -2,11 +2,16 @@
 
 **freee での 8 時間勤務が終わる前と完了時に、デスクトップ通知を自動送信します**
 
-<img width="339" height="370" alt="スクリーンショット 2025-09-24 23 39 55" src="https://github.com/user-attachments/assets/e8a967be-a5a4-4f7c-a367-59b9d45007d9" />
+
+
+<img width="376" height="113" alt="スクリーンショット 2025-09-24 23 41 12" src="https://github.com/user-attachments/assets/3de27a2d-c543-430e-b6a1-fcbe1d58631f" />
 
 ---
 
-<img width="376" height="113" alt="スクリーンショット 2025-09-24 23 41 12" src="https://github.com/user-attachments/assets/3de27a2d-c543-430e-b6a1-fcbe1d58631f" />
+<img width="339" height="370" alt="スクリーンショット 2025-09-24 23 39 55" src="https://github.com/user-attachments/assets/e8a967be-a5a4-4f7c-a367-59b9d45007d9" />
+
+
+
 ## ✨ できること
 
 - 🕘 **退勤前に 2 回のタイミングで自動通知（時間は変更可能）**

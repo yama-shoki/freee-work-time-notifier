@@ -50,6 +50,8 @@
 
 ### 4. Chrome 拡張機能に追加
 
+**Chrome の場合：**
+
 1. Chrome で [chrome://extensions/](chrome://extensions/) を開く
 2. 右上の **「デベロッパーモード」** を ON にする
 3. **「パッケージ化されていない拡張機能を読み込む」** をクリック
@@ -58,6 +60,13 @@
 <p align="center">
   <img width="1920" height="1080" alt="スクリーンショット 2025-09-24 23 47 21" src="https://github.com/user-attachments/assets/5b60fbc1-8eab-4d1d-ad7d-7039923e8ee2" />
 </p>
+
+**Arc の場合：**
+
+1. 画面上部の **Extensions** > **Manage Extensions** を開く
+2. **Developer mode** を ON にする
+3. **Load unpacked** をクリック
+4. 解凍したフォルダを選択
 
 ### 5. 動作テスト
 

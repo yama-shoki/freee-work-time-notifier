@@ -63,7 +63,12 @@
    <img width="1920" height="1080" alt="スクリーンショット 2025-09-24 23 52 18" src="https://github.com/user-attachments/assets/74520281-61d3-4834-9bba-8154b665dc89" />
 
 5. デスクトップ通知が届けば成功です。
+
+---
+
    <img width="376" height="113" alt="スクリーンショット 2025-09-24 23 41 12" src="https://github.com/user-attachments/assets/d92bb237-0e86-4276-9481-50da1464730c" />
+
+---
 
 6. 機能しない場合は再読み込みをして、再度、「修正」ボタンをクリックしてください。
 

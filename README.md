@@ -53,7 +53,7 @@
 
 **Chrome の場合：**
 
-1. Chrome で [chrome://extensions/](chrome://extensions/) を開く
+1. Chrome で `chrome://extensions/` を開く（アドレスバーにコピー&ペースト）
 2. 右上の **「デベロッパーモード」** を ON にする
 3. **「パッケージ化されていない拡張機能を読み込む」** をクリック
 4. 解凍したフォルダを選択

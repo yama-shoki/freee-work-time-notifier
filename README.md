@@ -1,6 +1,8 @@
 # freee 退勤通知 Chrome 拡張機能
 
 **freee での 8 時間勤務が終わる前と完了時に、デスクトップ通知を自動送信します**
+<img width="376" height="113" alt="スクリーンショット 2025-09-24 23 41 12" src="https://github.com/user-attachments/assets/3de27a2d-c543-430e-b6a1-fcbe1d58631f" />
+<img width="339" height="370" alt="スクリーンショット 2025-09-24 23 39 55" src="https://github.com/user-attachments/assets/e8a967be-a5a4-4f7c-a367-59b9d45007d9" />
 
 ## ✨ できること
 
@@ -24,6 +26,7 @@
 ### 1. 通知権限の確認
 
 - macOS の場合：システム設定 > 通知 > Google Chrome が許可されていることを確認
+<img width="707" height="949" alt="スクリーンショット 2025-09-24 23 42 14" src="https://github.com/user-attachments/assets/7261293d-484a-465f-b665-83b0f5eb3875" />
 
 ### 2. ファイルをダウンロード
 
@@ -39,14 +42,21 @@
 2. 右上の**「デベロッパーモード」**を ON にする
 3. **「パッケージ化されていない拡張機能を読み込む」**をクリック
 4. 解凍したフォルダを選択
+<img width="1920" height="1080" alt="スクリーンショット 2025-09-24 23 47 21" src="https://github.com/user-attachments/assets/5b60fbc1-8eab-4d1d-ad7d-7039923e8ee2" />
 
 ### 動作テスト
 
 1. [freee 勤怠管理](https://p.secure.freee.co.jp/)にログイン
 2. 右上の拡張機能アイコンを押して拡張機能を開く。
-3. freee の**「修正」**ボタンをクリック
-4. 「退勤通知設定完了」というデスクトップ通知が届けば成功です。
-5. 機能しない場合は再読み込みしてください。
+3. <img width="1920" height="1080" alt="スクリーンショット 2025-09-24 23 48 42" src="https://github.com/user-attachments/assets/c21a9c03-beb7-4a34-9035-7c189249ab84" />
+
+4. freee の**「修正」**ボタンをクリック
+   <img width="1920" height="1080" alt="スクリーンショット 2025-09-24 23 52 18" src="https://github.com/user-attachments/assets/74520281-61d3-4834-9bba-8154b665dc89" />
+
+5. デスクトップ通知が届けば成功です。
+   <img width="376" height="113" alt="スクリーンショット 2025-09-24 23 41 12" src="https://github.com/user-attachments/assets/d92bb237-0e86-4276-9481-50da1464730c" />
+
+6. 機能しない場合は再読み込みをして、再度、「修正」ボタンをクリックしてください。
 
 ## 💻 使い方
 

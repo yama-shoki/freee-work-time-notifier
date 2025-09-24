@@ -90,7 +90,15 @@ class NotificationManager {
     this.currentWorkDate = today;
     chrome.storage.local.set({ currentWorkDate: today });
 
-    if (completionInfo.status === "completed") {
+    if (completionInfo.status === "finished") {
+      // 退勤済みの場合の通知
+      this.showImmediateNotification({
+        type: "finished",
+        title: "勤務状況確認",
+        message: completionInfo.message,
+        iconUrl: chrome.runtime.getURL("icons/icon48.png"),
+      });
+    } else if (completionInfo.status === "completed") {
       // 既に8時間完了している場合の通知
       this.showImmediateNotification({
         type: "completed",
@@ -400,6 +408,8 @@ class NotificationManager {
         return 15000; // 15秒
       case "completed": // 既に完了済み
         return 10000; // 10秒（情報通知なので短め）
+      case "finished": // 退勤済み
+        return 12000; // 12秒（確認用）
       case "status": // 設定完了
         return 8000; // 8秒（確認用なので短め）
       default:

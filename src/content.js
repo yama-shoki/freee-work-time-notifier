@@ -16,6 +16,7 @@ class FreeeNotificationManager {
   init() {
     console.log("freee退勤通知が開始されました");
     this.checkWorkDateAndReset();
+    this.loadStoredData(); // 保存されたデータを復元
     this.observeDialogAppearance();
   }
 
@@ -128,12 +129,15 @@ class FreeeNotificationManager {
 
     const startMinutes = this.timeToMinutes(attendanceData.startTime);
 
-    // 終了時刻の決定: 退勤時刻が設定されていても、現在時刻の方が遅い場合は現在時刻を使用
+    // 退勤済みかどうかを判定
+    const isFinished = attendanceData.endTime && attendanceData.endTime !== "";
+
     let endMinutes;
-    if (attendanceData.endTime) {
-      const recordedEndMinutes = this.timeToMinutes(attendanceData.endTime);
-      endMinutes = Math.max(recordedEndMinutes, currentMinutes); // より遅い時刻を使用
+    if (isFinished) {
+      // 退勤済み: 記録された退勤時刻を使用
+      endMinutes = this.timeToMinutes(attendanceData.endTime);
     } else {
+      // 勤務中: 現在時刻を使用
       endMinutes = currentMinutes;
     }
 
@@ -141,18 +145,40 @@ class FreeeNotificationManager {
     let totalBreakMinutes = 0;
     attendanceData.breaks.forEach((breakPeriod) => {
       const breakStart = this.timeToMinutes(breakPeriod.startTime);
-      const breakEnd = breakPeriod.endTime
-        ? this.timeToMinutes(breakPeriod.endTime)
-        : currentMinutes;
+      let breakEnd;
+
+      if (breakPeriod.endTime) {
+        breakEnd = this.timeToMinutes(breakPeriod.endTime);
+      } else if (isFinished) {
+        // 退勤済みで休憩終了時刻未入力の場合は退勤時刻まで
+        breakEnd = endMinutes;
+      } else {
+        // 勤務中で休憩終了時刻未入力の場合は現在時刻まで
+        breakEnd = currentMinutes;
+      }
+
       totalBreakMinutes += breakEnd - breakStart;
     });
 
     // 実勤務時間を計算
     const actualWorkMinutes = endMinutes - startMinutes - totalBreakMinutes;
 
-    // 8時間完了予定時刻を計算
+    // 退勤済みの場合
+    if (isFinished) {
+      const workHours = Math.floor(actualWorkMinutes / 60);
+      const workMins = actualWorkMinutes % 60;
+
+      return {
+        status: "finished",
+        endTime: attendanceData.endTime,
+        actualWorkMinutes: actualWorkMinutes,
+        message: `退勤済み (${workHours}時間${workMins}分勤務)`,
+      };
+    }
+
+    // 勤務中の場合（既存ロジック）
     if (actualWorkMinutes >= this.EIGHT_HOURS_MINUTES) {
-      // 既に8時間完了
+      // 既に8時間完了済みだが勤務中
       const overtimeMinutes = actualWorkMinutes - this.EIGHT_HOURS_MINUTES;
       const completionTime = this.addMinutesToTime(
         attendanceData.startTime,
@@ -166,7 +192,7 @@ class FreeeNotificationManager {
         overtimeMinutes: overtimeMinutes,
         message: `8時間勤務完了済み（${Math.floor(overtimeMinutes / 60)}時間${
           overtimeMinutes % 60
-        }分超過）`,
+        }分超過）正確な時間は「修正」ボタンを再度クリック`,
       };
     } else {
       // まだ8時間未完了
@@ -189,9 +215,14 @@ class FreeeNotificationManager {
 
   // バックグラウンドスクリプトに通知データを送信
   sendNotificationData(completionInfo) {
-    // 今日の日付を含めた比較で重複チェック
+    // 今日の日付とタイムスタンプを含めた比較で重複チェック
     const today = this.getTodayDateString();
-    const dataWithDate = { ...completionInfo, workDate: today };
+    const now = new Date();
+    const dataWithDate = {
+      ...completionInfo,
+      workDate: today,
+      savedAt: now.toISOString(), // JST時刻で保存
+    };
 
     if (
       JSON.stringify(dataWithDate) === JSON.stringify(this.lastNotificationData)
@@ -201,6 +232,11 @@ class FreeeNotificationManager {
     }
 
     this.lastNotificationData = dataWithDate;
+
+    // storage.localにも保存（復元用）
+    chrome.storage.local.set({
+      [`workData_${today}`]: dataWithDate,
+    });
 
     chrome.runtime
       .sendMessage({
@@ -248,6 +284,76 @@ class FreeeNotificationManager {
     this.currentWorkDate = today;
   }
 
+  // 保存されたデータを復元（日本時間で計算）
+  loadStoredData() {
+    const today = this.getTodayDateString();
+    chrome.storage.local.get([`workData_${today}`], (result) => {
+      const storedData = result[`workData_${today}`];
+      if (storedData && storedData.workDate === today) {
+        // 日本時間で現在時刻を取得
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        // 保存データから時刻差分で再計算
+        const recalculatedData = this.recalculateFromStoredData(
+          storedData,
+          currentMinutes
+        );
+        this.lastNotificationData = recalculatedData;
+
+        console.log("保存データを復元しました:", recalculatedData);
+      } else {
+        console.log("復元可能な保存データが見つかりません");
+      }
+    });
+  }
+
+  // 保存データから現在時刻での状態を再計算
+  recalculateFromStoredData(storedData, currentMinutes) {
+    let updatedData = { ...storedData };
+
+    // 退勤済みの場合はそのまま返す（時刻は変わらない）
+    if (storedData.status === "finished") {
+      return updatedData;
+    }
+
+    // 勤務中の場合のみ再計算
+    if (storedData.completionTime) {
+      const completionMinutes = this.timeToMinutes(storedData.completionTime);
+
+      if (storedData.status === "pending") {
+        const remainingMinutes = completionMinutes - currentMinutes;
+
+        if (remainingMinutes > 0) {
+          // まだ完了時刻前
+          updatedData.message = `8時間完了予定: ${
+            storedData.completionTime
+          } (残り${Math.floor(remainingMinutes / 60)}時間${
+            remainingMinutes % 60
+          }分)`;
+          updatedData.remainingMinutes = remainingMinutes;
+        } else {
+          // 完了時刻を過ぎている - 超過勤務状態（但し勤務中）
+          const overtimeMinutes = currentMinutes - completionMinutes;
+          updatedData.status = "completed";
+          updatedData.message = `8時間勤務完了済み（${Math.floor(
+            overtimeMinutes / 60
+          )}時間${overtimeMinutes % 60}分超過）`;
+          updatedData.overtimeMinutes = overtimeMinutes;
+        }
+      } else if (storedData.status === "completed") {
+        // 既に完了済みで勤務中の場合、超過時間を再計算
+        const overtimeMinutes = currentMinutes - completionMinutes;
+        updatedData.message = `8時間勤務完了済み（${Math.floor(
+          overtimeMinutes / 60
+        )}時間${overtimeMinutes % 60}分超過）`;
+        updatedData.overtimeMinutes = overtimeMinutes;
+      }
+    }
+
+    return updatedData;
+  }
+
   // 今日の日付文字列を取得 (YYYY-MM-DD形式)
   getTodayDateString() {
     const now = new Date();
@@ -283,6 +389,7 @@ chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
       sendResponse({
         working: true,
         workDate: manager.currentWorkDate,
+        workData: manager.lastNotificationData,
         workTime: manager.lastNotificationData
           ? manager.lastNotificationData.message
           : "未設定",

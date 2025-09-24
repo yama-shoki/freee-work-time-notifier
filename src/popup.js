@@ -92,8 +92,17 @@ document.addEventListener("DOMContentLoaded", () => {
               statusElement.textContent = "⚠️ ページを再読み込みしてください";
               statusElement.className = "status inactive";
             } else if (response && response.working) {
-              statusElement.innerHTML = `✅ 勤務中<br><small>${response.workTime}</small>`;
-              statusElement.className = "status active";
+              const workData = response.workData;
+
+              if (workData && workData.status === "finished") {
+                // 退勤済みの表示
+                statusElement.innerHTML = `🏁 ${workData.message}`;
+                statusElement.className = "status active";
+              } else {
+                // 勤務中の表示
+                statusElement.innerHTML = `✅ 勤務中<br><small>${response.workTime}</small>`;
+                statusElement.className = "status active";
+              }
             }
           }
         );

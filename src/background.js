@@ -265,29 +265,9 @@ class NotificationManager {
                 });
             }, autoDismissDelay);
 
-            // 音の通知（オプション）
-            if (options.type === 'warning' || options.type === 'success') {
-                this.playNotificationSound();
-            }
         } catch (error) {
             console.error('通知表示エラー:', error);
         }
-    }
-
-    // 通知音を再生（オプション）
-    playNotificationSound() {
-        // ブラウザの通知音を使用（カスタムサウンドは追加実装が必要）
-        chrome.notifications.create('sound_notification', {
-            type: 'basic',
-            iconUrl: chrome.runtime.getURL('icons/icon16.png'),
-            title: '',
-            message: ''
-        }, (id) => {
-            // すぐに削除してサウンドのみ再生
-            setTimeout(() => {
-                chrome.notifications.clear(id);
-            }, 100);
-        });
     }
 
     // 全てのアラームをクリア
@@ -362,7 +342,6 @@ class NotificationManager {
         const mins = minutes % 60;
         return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
     }
-
 
     // 通知タイプに応じた自動消去時間を取得（ミリ秒）
     getAutoDismissDelay(notificationType) {

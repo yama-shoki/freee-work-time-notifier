@@ -46,12 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         chrome.storage.sync.set(settings, () => {
             console.log('設定が保存されました:', settings);
-
-            // バックグラウンドスクリプトに設定変更を通知
-            chrome.runtime.sendMessage({
-                type: 'settingsUpdated',
-                data: settings
-            });
         });
     }
 

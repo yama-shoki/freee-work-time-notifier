@@ -17,7 +17,6 @@ class FreeeNotificationManager {
     console.log("freee退勤通知が開始されました");
     this.checkWorkDateAndReset();
     this.observeDialogAppearance();
-    this.observeHomePage();
   }
 
   // 修正ダイアログの出現を監視（既存コードベース）
@@ -49,23 +48,6 @@ class FreeeNotificationManager {
     });
   }
 
-  // ホームページの勤怠打刻部分も監視
-  observeHomePage() {
-    const observer = new MutationObserver(() => {
-      if (this.isProcessing) return;
-
-      // ホームページの勤怠打刻部分をチェック
-      setTimeout(() => {
-        this.checkHomePageData();
-      }, 1000);
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
   // 修正ダイアログから勤怠データを取得・処理
   processTimeRecords() {
     try {
@@ -85,26 +67,6 @@ class FreeeNotificationManager {
     } catch (error) {
       console.error("勤怠データ処理エラー:", error);
     }
-  }
-
-  // ホームページから現在時刻情報を取得
-  checkHomePageData() {
-    try {
-      // ホームページの勤怠打刻部分から現在時刻を取得
-      const currentTimeElements = document.querySelectorAll(".vb-clock__time");
-      if (currentTimeElements.length > 0) {
-        // 必要に応じて現在進行中のデータをチェック
-        this.checkOngoingWork();
-      }
-    } catch (error) {
-      console.error("ホームページデータ取得エラー:", error);
-    }
-  }
-
-  // 現在進行中の勤務をチェック
-  checkOngoingWork() {
-    // 必要に応じて「修正」ボタンを自動クリックして最新データを取得
-    // ただし、ユーザーの操作を妨げないよう注意深く実装
   }
 
   // 修正ダイアログから勤怠データを抽出

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>freee退勤通知設定</title>
+    <style>
+        body {
+            width: 300px;
+            padding: 20px;
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            font-size: 14px;
+            margin: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 16px;
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .status.active {
+            background-color: #e8f5e8;
+            color: #2d5a2d;
+            border: 1px solid #4caf50;
+        }
+        .status.inactive {
+            background-color: #ffeaa7;
+            color: #6c5500;
+            border: 1px solid #fdcb6e;
+        }
+        .settings {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        .setting-item {
+            margin-bottom: 15px;
+        }
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        .setting-item input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        .setting-item select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .info {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        .info h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #333;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔔 freee退勤通知</h1>
+        <div id="status" class="status inactive">
+            freeeページで動作確認中...
+        </div>
+    </div>
+
+    <div class="settings">
+        <div class="setting-item">
+            <label>
+                <input type="checkbox" id="enable-notifications" checked>
+                通知機能を有効にする
+            </label>
+        </div>
+
+        <div class="setting-item">
+            <label for="warning-time-1">1回目の通知タイミング:</label>
+            <select id="warning-time-1">
+                <option value="15">15分前</option>
+                <option value="10" selected>10分前</option>
+                <option value="5">5分前</option>
+            </select>
+        </div>
+
+        <div class="setting-item">
+            <label for="warning-time-2">2回目の通知タイミング:</label>
+            <select id="warning-time-2">
+                <option value="5">5分前</option>
+                <option value="3">3分前</option>
+                <option value="1" selected>1分前</option>
+            </select>
+        </div>
+
+        <div class="setting-item">
+            <label>
+                <input type="checkbox" id="sound-notification" checked>
+                通知音を有効にする
+            </label>
+        </div>
+    </div>
+
+    <div class="info">
+        <h3>📋 使い方</h3>
+        <p>1. freee勤怠管理ページを開く<br>
+           2. 「修正」ボタンをクリック<br>
+           3. 自動で8時間完了予定時刻を計算<br>
+           4. 設定した時間に通知が表示されます</p>
+    </div>
+
+    <div class="info">
+        <h3>⚙️ 対応機能</h3>
+        <p>• 複数回の休憩に対応<br>
+           • リアルタイム計算<br>
+           • 超過勤務の検出<br>
+           • macOS通知センター連携</p>
+    </div>
+
+    <div class="footer">
+        v1.0.0 | freee退勤通知
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

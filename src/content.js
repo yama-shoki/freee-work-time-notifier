@@ -121,7 +121,7 @@ class FreeeNotificationManager {
     return attendanceData;
   }
 
-  // 8時間労働完了予定時刻を計算
+  // 8時間勤務完了予定時刻を計算
   calculate8HourCompletion(attendanceData) {
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -147,7 +147,7 @@ class FreeeNotificationManager {
       totalBreakMinutes += breakEnd - breakStart;
     });
 
-    // 実労働時間を計算
+    // 実勤務時間を計算
     const actualWorkMinutes = endMinutes - startMinutes - totalBreakMinutes;
 
     // 8時間完了予定時刻を計算
@@ -164,7 +164,7 @@ class FreeeNotificationManager {
         completionTime: completionTime,
         actualWorkMinutes: actualWorkMinutes,
         overtimeMinutes: overtimeMinutes,
-        message: `8時間労働完了済み（${Math.floor(overtimeMinutes / 60)}時間${
+        message: `8時間勤務完了済み（${Math.floor(overtimeMinutes / 60)}時間${
           overtimeMinutes % 60
         }分超過）`,
       };
@@ -175,15 +175,16 @@ class FreeeNotificationManager {
         currentMinutes + remainingMinutes
       );
 
-              return {
-              status: "pending",
-              completionTime: completionTime,
-              actualWorkMinutes: actualWorkMinutes,
-              remainingMinutes: remainingMinutes,
-              message: `8時間完了予定: ${completionTime} (残り${Math.floor(
-                remainingMinutes / 60
-              )}時間${remainingMinutes % 60}分)`,
-            };    }
+      return {
+        status: "pending",
+        completionTime: completionTime,
+        actualWorkMinutes: actualWorkMinutes,
+        remainingMinutes: remainingMinutes,
+        message: `8時間完了予定: ${completionTime} (残り${Math.floor(
+          remainingMinutes / 60
+        )}時間${remainingMinutes % 60}分)`,
+      };
+    }
   }
 
   // バックグラウンドスクリプトに通知データを送信

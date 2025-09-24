@@ -26,6 +26,7 @@
         border-radius: 5px;
         margin-bottom: 15px;
         text-align: center;
+        line-height: 1.4;
       }
       .status.active {
         background-color: #e8f5e8;
@@ -42,7 +43,10 @@
         padding-top: 15px;
       }
       .setting-item {
-        margin-bottom: 15px;
+        margin-bottom: 25px;
+      }
+      .setting-item.hidden {
+        display: none;
       }
       .setting-item label {
         display: block;
@@ -117,7 +121,7 @@
         </label>
       </div>
 
-      <div class="setting-item">
+      <div class="setting-item" id="overtime-interval-setting">
         <label for="overtime-interval">通知間隔:</label>
         <select id="overtime-interval">
           <option value="15">15分ごと</option>

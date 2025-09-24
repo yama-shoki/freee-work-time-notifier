@@ -2,12 +2,8 @@
   "manifest_version": 3,
   "name": "freee退勤通知",
   "version": "1.0.0",
-  "description": "freee勤怠管理で8時間労働完了の10分前・1分前に通知",
-  "permissions": [
-    "notifications",
-    "storage",
-    "alarms"
-  ],
+  "description": "freee勤怠管理で8時間勤務完了の10分前・1分前に通知",
+  "permissions": ["notifications", "storage", "alarms", "activeTab"],
   "background": {
     "service_worker": "src/background.js"
   },

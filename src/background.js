@@ -77,7 +77,7 @@ class NotificationManager {
     }
   }
 
-  // 8時間労働完了の通知をスケジュール
+  // 8時間勤務完了の通知をスケジュール
   scheduleWorkEndNotifications(completionInfo) {
     // 日付変更チェックとアラームクリア
     this.checkAndResetDaily();
@@ -94,7 +94,7 @@ class NotificationManager {
       // 既に8時間完了している場合の通知
       this.showImmediateNotification({
         type: "completed",
-        title: "8時間労働完了済み",
+        title: "8時間勤務完了済み",
         message: completionInfo.message,
         iconUrl: chrome.runtime.getURL("icons/icon48.png"),
       });
@@ -195,7 +195,7 @@ class NotificationManager {
             this.showNotification({
               type: "basic",
               title: "超過勤務中",
-              message: `8時間労働を約${overtimeMinutes}分超過しています。`,
+              message: `8時間勤務を約${overtimeMinutes}分超過しています。`,
               iconUrl: chrome.runtime.getURL("icons/icon48.png"),
               requireInteraction: false,
             });
@@ -215,7 +215,7 @@ class NotificationManager {
           this.showNotification({
             type: "warning",
             title: `退勤${alarmData.minutesBefore}分前`,
-            message: `8時間労働完了まで${alarmData.minutesBefore}分です\n完了予定時刻: ${alarmData.completionTime}`,
+            message: `8時間勤務完了まで${alarmData.minutesBefore}分です\n完了予定時刻: ${alarmData.completionTime}`,
             iconUrl: chrome.runtime.getURL("icons/icon48.png"),
             requireInteraction: true,
           });
@@ -224,7 +224,7 @@ class NotificationManager {
         case "completion":
           this.showNotification({
             type: "success",
-            title: "8時間労働完了！",
+            title: "8時間勤務完了！",
             message: `お疲れさまでした！\n完了時刻: ${alarmData.completionTime}`,
             iconUrl: chrome.runtime.getURL("icons/icon48.png"),
             requireInteraction: true,
@@ -413,14 +413,3 @@ const notificationManager = new NotificationManager();
 
 // グローバルスコープに保存（デバッグ用）
 globalThis.notificationManagerInstance = notificationManager;
-
-// Service Worker永続化のためのkeep-alive
-chrome.runtime.onStartup.addListener(() => {
-  console.log("Chrome起動時にService Workerが起動しました");
-});
-
-// メッセージ受信時にService Workerを起動
-chrome.runtime.onMessage.addListener(() => {
-  console.log("メッセージ受信: Service Worker起動");
-  return true;
-});

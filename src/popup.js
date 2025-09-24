@@ -3,24 +3,26 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const statusElement = document.getElementById("status");
-  const enableNotifications = document.getElementById("enable-notifications");
   const warningTime1 = document.getElementById("warning-time-1");
   const warningTime2 = document.getElementById("warning-time-2");
   const enableOvertimeNotifications = document.getElementById(
     "enable-overtime-notifications"
   );
   const overtimeInterval = document.getElementById("overtime-interval");
+  const overtimeIntervalSetting = document.getElementById("overtime-interval-setting");
 
   // 設定を読み込み
   loadSettings();
 
   // 設定変更イベントリスナー
-  enableNotifications.addEventListener("change", saveSettings);
   warningTime1.addEventListener("change", saveSettings);
   warningTime2.addEventListener("change", saveSettings);
   enableOvertimeNotifications.addEventListener("change", () => {
-    overtimeInterval.disabled = !enableOvertimeNotifications.checked;
-    if (!enableOvertimeNotifications.checked) {
+    const isEnabled = enableOvertimeNotifications.checked;
+    overtimeInterval.disabled = !isEnabled;
+    overtimeIntervalSetting.classList.toggle("hidden", !isEnabled);
+
+    if (!isEnabled) {
       // アラームを解除する
       chrome.alarms.clear("overtime-notifier");
       console.log("超過勤務通知アラームを解除しました。");
@@ -36,19 +38,18 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadSettings() {
     chrome.storage.sync.get(
       {
-        enableNotifications: true,
         warningTime1: 10,
         warningTime2: 1,
         enableOvertimeNotifications: false,
         overtimeInterval: 30,
       },
       (items) => {
-        enableNotifications.checked = items.enableNotifications;
         warningTime1.value = items.warningTime1;
         warningTime2.value = items.warningTime2;
         enableOvertimeNotifications.checked = items.enableOvertimeNotifications;
         overtimeInterval.value = items.overtimeInterval;
         overtimeInterval.disabled = !items.enableOvertimeNotifications;
+        overtimeIntervalSetting.classList.toggle("hidden", !items.enableOvertimeNotifications);
       }
     );
   }
@@ -56,7 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // 設定を保存する
   function saveSettings() {
     const settings = {
-      enableNotifications: enableNotifications.checked,
       warningTime1: parseInt(warningTime1.value),
       warningTime2: parseInt(warningTime2.value),
       enableOvertimeNotifications: enableOvertimeNotifications.checked,
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
               statusElement.textContent = "⚠️ ページを再読み込みしてください";
               statusElement.className = "status inactive";
             } else if (response && response.working) {
-              statusElement.textContent = `✅ 勤務中 (${response.workTime})`;
+              statusElement.innerHTML = `✅ 勤務中<br><small>${response.workTime}</small>`;
               statusElement.className = "status active";
             }
           }

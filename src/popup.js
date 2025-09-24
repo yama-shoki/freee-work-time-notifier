@@ -98,6 +98,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 // 退勤済みの表示
                 statusElement.innerHTML = `🏁 ${workData.message}`;
                 statusElement.className = "status active";
+              } else if (workData && workData.status === "before_work") {
+                // 出勤前の表示
+                statusElement.innerHTML = `⏰ ${workData.message}`;
+                statusElement.className = "status inactive";
               } else {
                 // 勤務中の表示
                 statusElement.innerHTML = `✅ 勤務中<br><small>${response.workTime}</small>`;

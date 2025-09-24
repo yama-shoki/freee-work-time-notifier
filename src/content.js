@@ -17,7 +17,68 @@ class FreeeNotificationManager {
     console.log("freee退勤通知が開始されました");
     this.checkWorkDateAndReset();
     this.loadStoredData(); // 保存されたデータを復元
+    this.checkInitialWorkStatus(); // 初期勤務状態をチェック
     this.observeDialogAppearance();
+  }
+
+  // 初期勤務状態をチェック（修正ボタンを押さずに）
+  checkInitialWorkStatus() {
+    // 少し遅延させてページの読み込みを待つ
+    setTimeout(() => {
+      try {
+        console.log("初期勤務状態をチェック中...");
+
+        // 出勤ボタンの存在をチェック
+        const workStartButton = this.findWorkStartButton();
+
+        if (workStartButton) {
+          console.log("出勤ボタンが見つかりました - 出勤前と判定");
+          const beforeWorkInfo = {
+            status: "before_work",
+            message: "出勤前（出勤ボタンが表示されています）",
+            workDate: this.getTodayDateString(),
+          };
+
+          this.lastNotificationData = beforeWorkInfo;
+          this.sendNotificationData(beforeWorkInfo);
+        } else {
+          console.log("出勤ボタンが見つかりません - 他の方法で状態確認が必要");
+        }
+      } catch (error) {
+        console.error("初期勤務状態チェックエラー:", error);
+      }
+    }, 2000); // 2秒待機
+  }
+
+  // 出勤ボタンを探す
+  findWorkStartButton() {
+    // 複数のセレクターで出勤ボタンを探す
+    const selectors = [
+      'button:contains("出勤")',
+      'button[aria-label*="出勤"]',
+      'button[class*="出勤"]',
+      'button[title*="出勤"]',
+      '.vb-button:contains("出勤")',
+      // テキストで「出勤」を含むボタンを探す
+      'button'
+    ];
+
+    // まず簡単なセレクターで試す
+    let button = document.querySelector('button[aria-label*="出勤"]') ||
+                 document.querySelector('button[title*="出勤"]');
+
+    if (button) return button;
+
+    // すべてのボタンをチェックして「出勤」という文字を含むものを探す
+    const allButtons = document.querySelectorAll('button');
+    for (let btn of allButtons) {
+      if (btn.textContent && btn.textContent.includes('出勤')) {
+        console.log("出勤ボタンを発見:", btn.textContent);
+        return btn;
+      }
+    }
+
+    return null;
   }
 
   // 修正ダイアログの出現を監視（既存コードベース）

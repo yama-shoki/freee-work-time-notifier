@@ -3,7 +3,11 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const statusElement = document.getElementById("status");
+  const enableNotification1 = document.getElementById("enable-notification-1");
+  const notification1Setting = document.getElementById("notification-1-setting");
   const warningTime1 = document.getElementById("warning-time-1");
+  const enableNotification2 = document.getElementById("enable-notification-2");
+  const notification2Setting = document.getElementById("notification-2-setting");
   const warningTime2 = document.getElementById("warning-time-2");
   const enableOvertimeNotifications = document.getElementById(
     "enable-overtime-notifications"
@@ -15,8 +19,22 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSettings();
 
   // 設定変更イベントリスナー
+  enableNotification1.addEventListener("change", () => {
+    const isEnabled = enableNotification1.checked;
+    warningTime1.disabled = !isEnabled;
+    notification1Setting.classList.toggle("hidden", !isEnabled);
+    saveSettings();
+  });
   warningTime1.addEventListener("change", saveSettings);
+
+  enableNotification2.addEventListener("change", () => {
+    const isEnabled = enableNotification2.checked;
+    warningTime2.disabled = !isEnabled;
+    notification2Setting.classList.toggle("hidden", !isEnabled);
+    saveSettings();
+  });
   warningTime2.addEventListener("change", saveSettings);
+
   enableOvertimeNotifications.addEventListener("change", () => {
     const isEnabled = enableOvertimeNotifications.checked;
     overtimeInterval.disabled = !isEnabled;
@@ -38,14 +56,24 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadSettings() {
     chrome.storage.sync.get(
       {
+        enableNotification1: true,
         warningTime1: 10,
+        enableNotification2: true,
         warningTime2: 1,
         enableOvertimeNotifications: false,
         overtimeInterval: 30,
       },
       (items) => {
+        enableNotification1.checked = items.enableNotification1;
         warningTime1.value = items.warningTime1;
+        warningTime1.disabled = !items.enableNotification1;
+        notification1Setting.classList.toggle("hidden", !items.enableNotification1);
+
+        enableNotification2.checked = items.enableNotification2;
         warningTime2.value = items.warningTime2;
+        warningTime2.disabled = !items.enableNotification2;
+        notification2Setting.classList.toggle("hidden", !items.enableNotification2);
+
         enableOvertimeNotifications.checked = items.enableOvertimeNotifications;
         overtimeInterval.value = items.overtimeInterval;
         overtimeInterval.disabled = !items.enableOvertimeNotifications;
@@ -57,7 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // 設定を保存する
   function saveSettings() {
     const settings = {
+      enableNotification1: enableNotification1.checked,
       warningTime1: parseInt(warningTime1.value),
+      enableNotification2: enableNotification2.checked,
       warningTime2: parseInt(warningTime2.value),
       enableOvertimeNotifications: enableOvertimeNotifications.checked,
       overtimeInterval: parseInt(overtimeInterval.value),

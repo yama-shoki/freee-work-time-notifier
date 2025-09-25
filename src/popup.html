@@ -97,7 +97,14 @@
     </div>
 
     <div class="settings">
-      <div class="setting-item">
+      <div class="setting-interval">
+        <label>
+          <input type="checkbox" id="enable-notification-1" checked />
+          1回目の通知を有効にする
+        </label>
+      </div>
+
+      <div class="setting-item" id="notification-1-setting">
         <label for="warning-time-1">1回目の通知タイミング:</label>
         <select id="warning-time-1">
           <option value="60">1時間前</option>
@@ -108,7 +115,14 @@
         </select>
       </div>
 
-      <div class="setting-item">
+      <div class="setting-interval">
+        <label>
+          <input type="checkbox" id="enable-notification-2" checked />
+          2回目の通知を有効にする
+        </label>
+      </div>
+
+      <div class="setting-item" id="notification-2-setting">
         <label for="warning-time-2">2回目の通知タイミング:</label>
         <select id="warning-time-2">
           <option value="5">5分前</option>

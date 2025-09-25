@@ -110,36 +110,44 @@ class NotificationManager {
       // Get settings from storage, then schedule notifications
       chrome.storage.sync.get(
         {
+          enableNotification1: true,
           warningTime1: 10, // Default 10 minutes
+          enableNotification2: true,
           warningTime2: 1, // Default 1 minute
+          enableOvertimeNotifications: false,
+          overtimeInterval: 30,
         },
         (items) => {
-          const { warningTime1, warningTime2 } = items;
+          const { enableNotification1, warningTime1, enableNotification2, warningTime2, enableOvertimeNotifications, overtimeInterval } = items;
 
           const now = new Date();
           const currentTime = now.getHours() * 60 + now.getMinutes();
           const completion = this.timeToMinutes(completionInfo.completionTime);
 
-          // Schedule first notification
-          const notificationTime1 = completion - warningTime1;
-          if (notificationTime1 > currentTime) {
-            const delay1 = notificationTime1 - currentTime;
-            this.scheduleAlarm(`${warningTime1}min-warning`, delay1, {
-              type: "warning", // Generic warning type
-              minutesBefore: warningTime1,
-              completionTime: completionInfo.completionTime,
-            });
+          // Schedule first notification (only if enabled)
+          if (enableNotification1) {
+            const notificationTime1 = completion - warningTime1;
+            if (notificationTime1 > currentTime) {
+              const delay1 = notificationTime1 - currentTime;
+              this.scheduleAlarm(`${warningTime1}min-warning`, delay1, {
+                type: "warning", // Generic warning type
+                minutesBefore: warningTime1,
+                completionTime: completionInfo.completionTime,
+              });
+            }
           }
 
-          // Schedule second notification
-          const notificationTime2 = completion - warningTime2;
-          if (notificationTime2 > currentTime) {
-            const delay2 = notificationTime2 - currentTime;
-            this.scheduleAlarm(`${warningTime2}min-warning`, delay2, {
-              type: "warning", // Generic warning type
-              minutesBefore: warningTime2,
-              completionTime: completionInfo.completionTime,
-            });
+          // Schedule second notification (only if enabled)
+          if (enableNotification2) {
+            const notificationTime2 = completion - warningTime2;
+            if (notificationTime2 > currentTime) {
+              const delay2 = notificationTime2 - currentTime;
+              this.scheduleAlarm(`${warningTime2}min-warning`, delay2, {
+                type: "warning", // Generic warning type
+                minutesBefore: warningTime2,
+                completionTime: completionInfo.completionTime,
+              });
+            }
           }
 
           // Also need to update the completion notification
@@ -152,10 +160,29 @@ class NotificationManager {
           }
 
           // Update the status notification message to be dynamic
+          let notificationSummary = "";
+          if (enableNotification1) {
+            notificationSummary += `\n通知1: ${warningTime1}分前`;
+          }
+          if (enableNotification2) {
+            notificationSummary += `\n通知2: ${warningTime2}分前`;
+          }
+          if (!enableNotification1 && !enableNotification2) {
+            notificationSummary = "\n事前通知: オフ";
+          }
+
+          // 超過勤務通知の設定も追加
+          if (enableOvertimeNotifications) {
+            notificationSummary += `\n超過勤務: ${overtimeInterval}分ごと`;
+          } else {
+            notificationSummary += `\n超過勤務: オフ`;
+          }
+
+
           this.showImmediateNotification({
             type: "status",
             title: "退勤通知設定完了",
-            message: `${today}の通知をセットしました\n完了予定: ${completionInfo.completionTime}\n通知1: ${warningTime1}分前\n通知2: ${warningTime2}分前`,
+            message: `${this.getTodayDateString()}の通知をセットしました\n完了予定: ${completionInfo.completionTime}${notificationSummary}`,
             iconUrl: chrome.runtime.getURL("icons/icon48.png"),
           });
         }
@@ -371,7 +398,6 @@ class NotificationManager {
     this.clearAllAlarms();
 
     // 前日の勤務日データと作業データをクリア
-    const today = this.getTodayDateString();
     const yesterday = this.getYesterdayDateString();
 
     chrome.storage.local.remove([

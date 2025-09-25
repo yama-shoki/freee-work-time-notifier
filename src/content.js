@@ -26,13 +26,10 @@ class FreeeNotificationManager {
     // 少し遅延させてページの読み込みを待つ
     setTimeout(() => {
       try {
-        console.log("初期勤務状態をチェック中...");
-
         // 出勤ボタンの存在をチェック
         const workStartButton = this.findWorkStartButton();
 
         if (workStartButton) {
-          console.log("出勤ボタンが見つかりました - 出勤前と判定");
           const beforeWorkInfo = {
             status: "before_work",
             message: "出勤前（出勤ボタンが表示されています）",
@@ -41,8 +38,6 @@ class FreeeNotificationManager {
 
           this.lastNotificationData = beforeWorkInfo;
           this.sendNotificationData(beforeWorkInfo);
-        } else {
-          console.log("出勤ボタンが見つかりません - 他の方法で状態確認が必要");
         }
       } catch (error) {
         console.error("初期勤務状態チェックエラー:", error);
@@ -73,7 +68,6 @@ class FreeeNotificationManager {
     const allButtons = document.querySelectorAll('button');
     for (let btn of allButtons) {
       if (btn.textContent && btn.textContent.includes('出勤')) {
-        console.log("出勤ボタンを発見:", btn.textContent);
         return btn;
       }
     }
@@ -303,14 +297,26 @@ class FreeeNotificationManager {
       [`workData_${today}`]: dataWithDate,
     });
 
-    chrome.runtime
-      .sendMessage({
+    // Service Workerが休眠している可能性があるため、送信を試行
+    try {
+      chrome.runtime.sendMessage({
         type: "scheduleWorkEndNotification",
         data: dataWithDate,
-      })
-      .catch((error) => {
-        console.error("バックグラウンドへの送信エラー:", error);
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("バックグラウンドへの送信エラー:", chrome.runtime.lastError);
+          // Service Workerが応答しない場合、再試行
+          setTimeout(() => {
+            chrome.runtime.sendMessage({
+              type: "scheduleWorkEndNotification",
+              data: dataWithDate,
+            });
+          }, 100);
+        }
       });
+    } catch (error) {
+      console.error("メッセージ送信でエラー:", error);
+    }
   }
 
   // ユーティリティ関数: 時間文字列（HH:mm）を分に変換

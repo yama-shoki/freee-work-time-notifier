@@ -145,7 +145,7 @@ class NotificationManager {
     }
   }
 
-  // 8時間勤務完了の通知をスケジュール
+  // 勤務完了の通知をスケジュール
   scheduleWorkEndNotifications(completionInfo) {
     // 日付変更チェックとアラームクリア
     this.checkAndResetDaily();
@@ -169,10 +169,10 @@ class NotificationManager {
         iconUrl: chrome.runtime.getURL("icons/icon48.png"),
       });
     } else if (completionInfo.status === "completed") {
-      // 既に8時間完了している場合の通知
+      // 既に予定勤務時間完了している場合の通知
       this.showImmediateNotification({
         type: "completed",
-        title: "8時間勤務完了済み",
+        title: `予定勤務完了済み (${completionInfo.scheduledWorkHours}時間)`,
         message: completionInfo.message,
         iconUrl: chrome.runtime.getURL("icons/icon48.png"),
       });
@@ -226,6 +226,7 @@ class NotificationManager {
                 type: "warning", // Generic warning type
                 minutesBefore: actualWarningTime1,
                 completionTime: completionInfo.completionTime,
+                scheduledWorkHours: completionInfo.scheduledWorkHours,
               });
             }
           }
@@ -239,6 +240,7 @@ class NotificationManager {
                 type: "warning", // Generic warning type
                 minutesBefore: actualWarningTime2,
                 completionTime: completionInfo.completionTime,
+                scheduledWorkHours: completionInfo.scheduledWorkHours,
               });
             }
           }
@@ -249,6 +251,7 @@ class NotificationManager {
             this.scheduleAlarm("completion", delayCompletion, {
               type: "completion",
               completionTime: completionInfo.completionTime,
+              scheduledWorkHours: completionInfo.scheduledWorkHours,
             });
           }
 
@@ -274,7 +277,7 @@ class NotificationManager {
           this.showImmediateNotification({
             type: "status",
             title: "退勤通知設定完了",
-            message: `${this.getTodayDateString()}の通知をセットしました\n完了予定: ${
+            message: `${this.getTodayDateString()}\nの通知をセットしました\n完了予定: ${
               completionInfo.completionTime
             }${notificationSummary}`,
             iconUrl: chrome.runtime.getURL("icons/icon48.png"),
@@ -419,7 +422,7 @@ class NotificationManager {
             this.showNotification({
               type: "basic",
               title: "超過勤務中",
-              message: `8時間勤務を約${overtimeMinutes}分超過しています。`,
+              message: `${alarmData.scheduledWorkHours}時間勤務を約${overtimeMinutes}分超過しています。`,
               iconUrl: chrome.runtime.getURL("icons/icon48.png"),
               requireInteraction: false,
             });
@@ -438,7 +441,7 @@ class NotificationManager {
           this.showNotification({
             type: "warning",
             title: `退勤${alarmData.minutesBefore}分前`,
-            message: `8時間勤務完了まで${alarmData.minutesBefore}分です\n完了予定時刻: ${alarmData.completionTime}`,
+            message: `${alarmData.scheduledWorkHours}時間勤務完了まで${alarmData.minutesBefore}分です\n完了予定時刻: ${alarmData.completionTime}`,
             iconUrl: chrome.runtime.getURL("icons/icon48.png"),
             requireInteraction: true,
           });
@@ -467,7 +470,7 @@ class NotificationManager {
         case "completion":
           this.showNotification({
             type: "success",
-            title: "8時間勤務完了！",
+            title: `予定勤務完了！ (${alarmData.scheduledWorkHours}時間)`,
             message: `お疲れさまでした！\n完了時刻: ${alarmData.completionTime}`,
             iconUrl: chrome.runtime.getURL("icons/icon48.png"),
             requireInteraction: true,
@@ -481,7 +484,7 @@ class NotificationManager {
               customOvertime: 45,
             },
             (items) => {
-              // 超過時間計算のために完了時刻を保存 (条件ブロックの外に移動)
+              // 超過時間計算のために完了時刻を保存 (条件ブロックの外に移動) 
               chrome.storage.local.set({
                 completionTimeForOvertime: alarmData.completionTime,
               });

@@ -3,6 +3,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const statusElement = document.getElementById("status");
+  const workHoursInput = document.getElementById("work-hours");
   const enableNotification1 = document.getElementById("enable-notification-1");
   const notification1Setting = document.getElementById(
     "notification-1-setting"
@@ -37,6 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSettings();
 
   // 設定変更イベントリスナー
+  workHoursInput.addEventListener("input", saveSettings);
+
   enableNotification1.addEventListener("change", () => {
     const isEnabled = enableNotification1.checked;
     warningTime1.disabled = !isEnabled;
@@ -122,6 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadSettings() {
     chrome.storage.sync.get(
       {
+        workHours: 8,
         enableNotification1: true,
         warningTime1: 10,
         customWarning1: 25,
@@ -133,6 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
         customOvertime: 45,
       },
       (items) => {
+        workHoursInput.value = items.workHours;
         enableNotification1.checked = items.enableNotification1;
         warningTime1.value = items.warningTime1;
         customWarning1.value = items.customWarning1;
@@ -182,6 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 設定を保存する
   function saveSettings() {
     const settings = {
+      workHours: parseFloat(workHoursInput.value) || 8,
       enableNotification1: enableNotification1.checked,
       warningTime1:
         warningTime1.value === "custom"

@@ -7,19 +7,35 @@ class FreeeNotificationManager {
     this.processingTimeout = null;
     this.dialogWasVisible = false;
     this.lastNotificationData = null;
-    this.EIGHT_HOURS_MINUTES = 8 * 60; // 480分
+    this.scheduledWorkHours = 8; // Default to 8 hours, will be loaded from storage
     this.currentWorkDate = null; // 現在の勤務日を記録
 
     this.init();
   }
 
-  init() {
+  async init() {
     console.log("freee退勤通知が開始されました");
+    await this.loadScheduledWorkHours(); // Load initial work hours
+
+    // Listen for changes in storage to update scheduledWorkHours
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'sync' && changes.workHours) {
+        this.scheduledWorkHours = changes.workHours.newValue;
+        console.log(`予定勤務時間が ${this.scheduledWorkHours} 時間に更新されました。`);
+      }
+    });
+
     this.checkWorkDateAndReset();
     this.loadStoredData(); // 保存されたデータを復元
     this.checkInitialWorkStatus(); // 初期勤務状態をチェック
     this.observeDialogAppearance();
     this.startBreakButtonMonitoring(); // 休憩開始ボタンの監視を開始
+  }
+
+  async loadScheduledWorkHours() {
+    const items = await chrome.storage.sync.get({ workHours: 8 });
+    this.scheduledWorkHours = items.workHours;
+    console.log(`予定勤務時間を ${this.scheduledWorkHours} 時間に設定しました。`);
   }
 
   // 初期勤務状態をチェック（修正ボタンを押さずに）
@@ -193,7 +209,7 @@ class FreeeNotificationManager {
     }
   }
 
-  // 8時間勤務完了予定時刻を計算
+  // 勤務完了予定時刻を計算
   calculate8HourCompletion(attendanceData) {
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -238,6 +254,7 @@ class FreeeNotificationManager {
 
     // 実勤務時間を計算
     const actualWorkMinutes = endMinutes - startMinutes - totalBreakMinutes;
+    const scheduledWorkMinutes = this.scheduledWorkHours * 60;
 
     // 退勤済みの場合
     if (isFinished) {
@@ -249,17 +266,18 @@ class FreeeNotificationManager {
         endTime: attendanceData.endTime,
         actualWorkMinutes: actualWorkMinutes,
         totalBreakMinutes: totalBreakMinutes,
+        scheduledWorkHours: this.scheduledWorkHours,
         message: `退勤済み (${workHours}時間${workMins}分勤務)`,
       };
     }
 
     // 勤務中の場合（既存ロジック）
-    if (actualWorkMinutes >= this.EIGHT_HOURS_MINUTES) {
-      // 既に8時間完了済みだが勤務中
-      const overtimeMinutes = actualWorkMinutes - this.EIGHT_HOURS_MINUTES;
+    if (actualWorkMinutes >= scheduledWorkMinutes) {
+      // 既に予定勤務時間完了済みだが勤務中
+      const overtimeMinutes = actualWorkMinutes - scheduledWorkMinutes;
       const completionTime = this.addMinutesToTime(
         attendanceData.startTime,
-        this.EIGHT_HOURS_MINUTES + totalBreakMinutes
+        scheduledWorkMinutes + totalBreakMinutes
       );
 
       const breakTimeDisplay =
@@ -274,13 +292,14 @@ class FreeeNotificationManager {
         actualWorkMinutes: actualWorkMinutes,
         overtimeMinutes: overtimeMinutes,
         totalBreakMinutes: totalBreakMinutes,
-        message: `8時間勤務完了済み（${Math.floor(overtimeMinutes / 60)}時間${
+        scheduledWorkHours: this.scheduledWorkHours,
+        message: `予定勤務完了済み（${Math.floor(overtimeMinutes / 60)}時間${
           overtimeMinutes % 60
         }分超過）${breakTimeDisplay}\n※正確な時間と現在のステータスは「修正」ボタンで確認してください`,
       };
     } else {
-      // まだ8時間未完了
-      const remainingMinutes = this.EIGHT_HOURS_MINUTES - actualWorkMinutes;
+      // まだ予定勤務時間未完了
+      const remainingMinutes = scheduledWorkMinutes - actualWorkMinutes;
       const completionTime = this.minutesToTime(
         currentMinutes + remainingMinutes
       );
@@ -297,7 +316,8 @@ class FreeeNotificationManager {
         actualWorkMinutes: actualWorkMinutes,
         remainingMinutes: remainingMinutes,
         totalBreakMinutes: totalBreakMinutes,
-        message: `8時間完了予定: ${completionTime} (残り${Math.floor(
+        scheduledWorkHours: this.scheduledWorkHours,
+        message: `予定勤務完了予定: ${completionTime} (残り${Math.floor(
           remainingMinutes / 60
         )}時間${remainingMinutes % 60}分)${breakTimeDisplay}\n※正確な時間と現在のステータスは「修正」ボタンで確認してください`,
       };
@@ -441,6 +461,8 @@ class FreeeNotificationManager {
       return updatedData;
     }
 
+    const scheduledWorkMinutes = storedData.scheduledWorkHours * 60;
+
     // 勤務中の場合のみ再計算
     if (storedData.completionTime) {
       const completionMinutes = this.timeToMinutes(storedData.completionTime);
@@ -457,7 +479,7 @@ class FreeeNotificationManager {
                 }分`
               : "";
 
-          updatedData.message = `8時間完了予定: ${
+          updatedData.message = `予定勤務完了予定: ${
             storedData.completionTime
           } (残り約${Math.floor(remainingMinutes / 60)}時間${
             remainingMinutes % 60
@@ -476,7 +498,7 @@ ${breakTimeDisplay}
               : "";
 
           updatedData.status = "completed";
-          updatedData.message = `8時間勤務完了済み（約${Math.floor(
+          updatedData.message = `予定勤務完了済み（約${Math.floor(
             overtimeMinutes / 60
           )}時間${overtimeMinutes % 60}分超過）
 ${breakTimeDisplay}
@@ -493,7 +515,7 @@ ${breakTimeDisplay}
               }分`
             : "";
 
-        updatedData.message = `8時間勤務完了済み（約${Math.floor(
+        updatedData.message = `予定勤務完了済み（約${Math.floor(
           overtimeMinutes / 60
         )}時間${overtimeMinutes % 60}分超過）
 ${breakTimeDisplay}

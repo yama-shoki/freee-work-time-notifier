@@ -54,7 +54,7 @@
 （例: ドキュメントフォルダ内など、永続的に保存される場所）
 
 <p align="center">
-  <!-- 画像はここに挿入されます -->
+<img width="1436" height="651" alt="スクリーンショット 2025-09-25 18 17 01" src="https://github.com/user-attachments/assets/46d85a6b-18fb-406f-b41e-3d14c8d38c8f" />
 </p>
 
 ### 4. Chrome 拡張機能に追加

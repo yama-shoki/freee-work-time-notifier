@@ -85,7 +85,7 @@
 ### 5. 動作テスト
 
 1. [freee 勤怠管理](https://p.secure.freee.co.jp/) にログイン
-2. 右上の拡張機能アイコンを押して拡張機能を開き、ステータスを確認する
+2. 右上の拡張機能アイコンを押して拡張機能を開き、freeeのアイコンをクリックしてステータスを確認する。ピン留めしておくと便利です。
 
 <p align="center">
   <img width="1920" height="1080" alt="スクリーンショット 2025-09-24 23 48 42" src="https://github.com/user-attachments/assets/c21a9c03-beb7-4a34-9035-7c189249ab84" />

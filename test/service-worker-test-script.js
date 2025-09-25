@@ -320,3 +320,51 @@ runTest("日付変更時のリセットテスト (手動確認推奨)", async ()
   console.log("期待される通知: なし。すべてのアラームがクリアされていることを確認してください。");
 });
 // ======================ここまでをコピペ=======================
+
+// テストケース9: カスタム勤務時間での完了通知テスト
+// ===========================ここから====================
+runTest("カスタム勤務時間での完了通知テスト", async () => {
+  const now = new Date();
+  const testDate = now.toISOString().split("T")[0];
+  const customWorkHours = 3.5; // 3.5時間勤務をテスト
+
+  // テスト用の設定を一時的に変更
+  await new Promise((resolve) => {
+    chrome.storage.sync.set(
+      {
+        workHours: customWorkHours, // カスタム勤務時間を設定
+        enableNotification1: true,
+        warningTime1: 1, // 1分前通知
+        enableNotification2: true,
+        warningTime2: 0.5, // 30秒前通知
+        enableOvertimeNotifications: true,
+        overtimeInterval: 0.5, // 30秒ごと
+      },
+      resolve
+    );
+  });
+  console.log(`⚙️ テスト設定を適用しました。勤務時間: ${customWorkHours}時間、1分前通知、30秒前通知、30秒ごとの超過勤務通知が期待されます。`);
+
+  // 完了予定時刻を現在時刻+2分後に設定
+  const completionTime = addMinutesToCurrentTime(2);
+  const workEndData = {
+    status: "pending",
+    completionTime: completionTime,
+    actualWorkMinutes: (customWorkHours * 60) - 10, // 予定勤務時間より少し少ない
+    remainingMinutes: 10,
+    message: `予定勤務完了予定: ${completionTime} (${customWorkHours}時間勤務)`,
+    workDate: testDate,
+    scheduledWorkHours: customWorkHours, // content.jsから渡される想定
+  };
+
+  console.log(
+    `📨 勤務完了通知をスケジュール: 完了予定 ${workEndData.completionTime}`
+  );
+  notificationManager.scheduleWorkEndNotifications(workEndData);
+  console.log(`期待される通知: ${customWorkHours}時間勤務の1分前通知、30秒前通知、完了時通知、その後30秒ごとの超過勤務通知。`);
+  console.log(`完了時通知タイトル: '予定勤務完了！ (${customWorkHours}時間)'`);
+  console.log(`警告通知メッセージ1: '${customWorkHours}時間勤務完了まで1分です...'`);
+  console.log(`警告通知メッセージ2: '${customWorkHours}時間勤務完了まで0.5分です...'`);
+  console.log(`超過勤務通知メッセージ: '${customWorkHours}時間勤務を約...分超過しています。'`);
+});
+// ======================ここまでをコピペ=======================

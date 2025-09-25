@@ -410,8 +410,11 @@ class NotificationManager {
   handleAlarm(alarm) {
     // 超過勤務通知の処理
     if (alarm.name === "overtime-notifier") {
-      chrome.storage.local.get("completionTimeForOvertime", (result) => {
+      chrome.storage.local.get(["completionTimeForOvertime", "alarm_overtime-notifier"], (result) => {
         const completionTime = result.completionTimeForOvertime;
+        const overtimeAlarmData = result["alarm_overtime-notifier"]; // Retrieve stored data
+        const scheduledWorkHours = overtimeAlarmData ? overtimeAlarmData.scheduledWorkHours : 8; // Default to 8 if not found
+
         if (completionTime) {
           const completionMinutes = this.timeToMinutes(completionTime);
           const now = new Date();
@@ -422,7 +425,7 @@ class NotificationManager {
             this.showNotification({
               type: "basic",
               title: "超過勤務中",
-              message: `${alarmData.scheduledWorkHours}時間勤務を約${overtimeMinutes}分超過しています。`,
+              message: `${scheduledWorkHours}時間勤務を約${overtimeMinutes}分超過しています。`,
               iconUrl: chrome.runtime.getURL("icons/icon48.png"),
               requireInteraction: false,
             });
@@ -484,7 +487,7 @@ class NotificationManager {
               customOvertime: 45,
             },
             (items) => {
-              // 超過時間計算のために完了時刻を保存 (条件ブロックの外に移動) 
+              // 超過時間計算のために完了時刻を保存
               chrome.storage.local.set({
                 completionTimeForOvertime: alarmData.completionTime,
               });
@@ -500,6 +503,14 @@ class NotificationManager {
                 chrome.alarms.create("overtime-notifier", {
                   delayInMinutes: actualInterval,
                   periodInMinutes: actualInterval,
+                });
+
+                // Store scheduledWorkHours for the overtime-notifier alarm
+                chrome.storage.local.set({
+                  "alarm_overtime-notifier": {
+                    scheduledWorkHours: alarmData.scheduledWorkHours,
+                    type: "overtime", // Add a type for clarity
+                  },
                 });
               }
             }

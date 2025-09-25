@@ -9,7 +9,7 @@ class NotificationManager {
   }
 
   init() {
-    console.log("freee退勤通知バックグラウンドが開始されました");
+    console.log("freee退勤通知が開始されました");
 
     // content scriptからのメッセージを監視
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -31,7 +31,6 @@ class NotificationManager {
 
     // Service Worker起動時の初期化
     chrome.runtime.onStartup.addListener(() => {
-      console.log("Service Workerが起動しました");
       this.createNotificationPermission();
       this.initializeDailyReset();
     });
@@ -56,6 +55,18 @@ class NotificationManager {
         break;
       case "cancelBreakNotifications":
         this.cancelBreakNotifications(message.data);
+        sendResponse({ success: true });
+        break;
+      case "showBreakStartNotification":
+        this.showBreakStartNotification(message.data);
+        sendResponse({ success: true });
+        break;
+      case "showBreakEndNotification":
+        this.showBreakEndNotification(message.data);
+        sendResponse({ success: true });
+        break;
+      case "showBreakEndWithWorkNotification":
+        this.showBreakEndWithWorkNotification(message.data);
         sendResponse({ success: true });
         break;
       default:
@@ -90,8 +101,8 @@ class NotificationManager {
     // 日付変更チェックとアラームクリア
     this.checkAndResetDaily();
 
-    // 既存のアラームをクリア
-    this.clearAllAlarms();
+    // 既存の勤務終了アラームをクリア（休憩アラームは保持）
+    this.clearWorkEndAlarms();
 
     // 今日の勤務日を記録
     const today = this.getTodayDateString();
@@ -220,27 +231,48 @@ class NotificationManager {
     // 休憩終了予定時刻を計算
     const breakEndMinutes = breakStartMinutes + breakDuration;
 
+    // 休憩終了時刻に通知をスケジュール
+    if (breakEndMinutes > currentMinutes) {
+      const delayMinutes = breakEndMinutes - currentMinutes;
+      const alarmName = `break_end_${breakStartTime.replace(":", "")}`;
+      this.scheduleAlarm(alarmName, delayMinutes, {
+        type: "break_end_exact",
+        breakEndTime: this.minutesToTime(breakEndMinutes),
+      });
+      console.log(
+        `休憩終了時刻の通知をスケジュールしました: ${this.minutesToTime(
+          breakEndMinutes
+        )}`
+      );
+    }
+
     // 通知時刻を計算（休憩終了の○分前）
     const notificationMinutes = breakEndMinutes - warningTime;
 
     // 現在時刻より後の場合のみスケジュール
     if (notificationMinutes > currentMinutes) {
       const delayMinutes = notificationMinutes - currentMinutes;
-      const alarmName = `${workDate}_break_${breakStartTime.replace(':', '')}_warning`;
+      const baseAlarmName = `break_${breakStartTime.replace(":", "")}_warning`;
 
       // 既存の休憩アラームをクリア（同じ休憩時間の重複を防ぐ）
-      chrome.alarms.clear(alarmName);
+      const today = this.getTodayDateString();
+      const fullAlarmName = `${today}_${baseAlarmName}`;
+      chrome.alarms.clear(fullAlarmName);
 
       // 新しいアラームをスケジュール
-      this.scheduleAlarm(`break_${breakStartTime.replace(':', '')}_warning`, delayMinutes, {
+      this.scheduleAlarm(baseAlarmName, delayMinutes, {
         type: "break_warning",
         breakStartTime: breakStartTime,
         breakDuration: breakDuration,
         warningTime: warningTime,
-        breakEndTime: this.minutesToTime(breakEndMinutes)
+        breakEndTime: this.minutesToTime(breakEndMinutes),
       });
 
-      console.log(`休憩終了通知をスケジュールしました: ${breakStartTime}開始 → ${this.minutesToTime(notificationMinutes)}に${warningTime}分前通知`);
+      console.log(
+        `休憩終了通知をスケジュールしました: ${breakStartTime}開始、${this.minutesToTime(
+          notificationMinutes
+        )}に${warningTime}分前通知`
+      );
     }
   }
 
@@ -259,6 +291,36 @@ class NotificationManager {
           console.log(`休憩通知をキャンセルしました: ${alarm.name}`);
         }
       });
+    });
+  }
+
+  // 休憩開始時の即座通知
+  showBreakStartNotification(data) {
+    this.showImmediateNotification({
+      type: "break_start",
+      title: "☕ 休憩開始",
+      message: data.message,
+      iconUrl: chrome.runtime.getURL("icons/icon48.png"),
+    });
+  }
+
+  // 休憩終了時の即座通知
+  showBreakEndNotification(data) {
+    this.showImmediateNotification({
+      type: "break_end",
+      title: "🔄 休憩終了",
+      message: data.message,
+      iconUrl: chrome.runtime.getURL("icons/icon48.png"),
+    });
+  }
+
+  // 休憩終了+勤務情報の即座通知
+  showBreakEndWithWorkNotification(data) {
+    this.showImmediateNotification({
+      type: "break_end_with_work",
+      title: "🔄 休憩終了",
+      message: data.message,
+      iconUrl: chrome.runtime.getURL("icons/icon48.png"),
     });
   }
 
@@ -306,8 +368,6 @@ class NotificationManager {
               iconUrl: chrome.runtime.getURL("icons/icon48.png"),
               requireInteraction: false,
             });
-          } else {
-            console.log("超過時間が0分以下のため通知をスキップしました");
           }
         }
       });
@@ -340,6 +400,16 @@ class NotificationManager {
           });
           break;
 
+        case "break_end_exact":
+          this.showNotification({
+            type: "break_end",
+            title: "☕ 休憩終了",
+            message: "休憩終了予定時刻になりました。",
+            iconUrl: chrome.runtime.getURL("icons/icon48.png"),
+            requireInteraction: true,
+          });
+          break;
+
         case "completion":
           this.showNotification({
             type: "success",
@@ -359,7 +429,10 @@ class NotificationManager {
             (items) => {
               if (items.enableOvertimeNotifications) {
                 // カスタム時間の解決
-                const actualInterval = items.overtimeInterval === "custom" ? items.customOvertime : parseInt(items.overtimeInterval);
+                const actualInterval =
+                  items.overtimeInterval === "custom"
+                    ? items.customOvertime
+                    : parseInt(items.overtimeInterval);
 
                 // 超過時間計算のために完了時刻を保存
                 chrome.storage.local.set({
@@ -443,7 +516,21 @@ class NotificationManager {
     }
   }
 
-  // 全てのアラームをクリア
+  // 勤務終了関連のアラームのみをクリア（休憩アラームは保持）
+  clearWorkEndAlarms() {
+    chrome.alarms.getAll((alarms) => {
+      alarms.forEach((alarm) => {
+        // 休憩関連のアラームは保持する
+        if (!alarm.name.includes('break_')) {
+          chrome.alarms.clear(alarm.name);
+          chrome.storage.local.remove(`alarm_${alarm.name}`);
+          this.activeAlarms.delete(alarm.name);
+        }
+      });
+    });
+  }
+
+  // 全てのアラームをクリア（日付変更時など）
   clearAllAlarms() {
     chrome.alarms.getAll((alarms) => {
       alarms.forEach((alarm) => {

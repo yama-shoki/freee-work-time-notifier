@@ -64,7 +64,9 @@ runTest("退勤通知（1回目・2回目・完了・超過勤務）", async () 
       resolve
     );
   });
-  console.log("⚙️ テスト設定を適用しました。1分前、30秒前、完了時、30秒ごとの超過勤務通知が期待されます。");
+  console.log(
+    "⚙️ テスト設定を適用しました。1分前、30秒前、完了時、30秒ごとの超過勤務通知が期待されます。"
+  );
 
   const workEndData = {
     status: "pending",
@@ -79,7 +81,9 @@ runTest("退勤通知（1回目・2回目・完了・超過勤務）", async () 
     `📨 退勤通知をスケジュール: 完了予定 ${workEndData.completionTime}`
   );
   notificationManager.scheduleWorkEndNotifications(workEndData);
-  console.log("期待される通知: 1分前、30秒前（実際は1分前）、完了時、その後30秒ごとの超過勤務通知。");
+  console.log(
+    "期待される通知: 1分前、30秒前（実際は1分前）、完了時、その後30秒ごとの超過勤務通知。"
+  );
 });
 // ======================ここまでをコピペ=======================
 
@@ -104,7 +108,9 @@ runTest("休憩終了通知（警告・正確な終了時刻）", async () => {
       resolve
     );
   });
-  console.log("⚙️ テスト設定を適用しました。休憩終了30秒前と正確な終了時刻に通知が期待されます。");
+  console.log(
+    "⚙️ テスト設定を適用しました。休憩終了30秒前と正確な終了時刻に通知が期待されます。"
+  );
 
   const breakData = {
     breakStartTime: currentTime,
@@ -114,9 +120,9 @@ runTest("休憩終了通知（警告・正確な終了時刻）", async () => {
   };
 
   console.log(
-    `☕ 休憩終了通知をスケジュール: ${breakData.breakStartTime}開始 → ${addMinutesToCurrentTime(
-      1
-    )}終了予定`
+    `☕ 休憩終了通知をスケジュール: ${
+      breakData.breakStartTime
+    }開始 → ${addMinutesToCurrentTime(1)}終了予定`
   );
   notificationManager.scheduleBreakEndNotification(breakData);
   console.log("期待される通知: 休憩終了30秒前（実際は1分前）、休憩終了時刻。");
@@ -139,7 +145,9 @@ runTest("8時間完了済みケース（超過勤務通知）", async () => {
       resolve
     );
   });
-  console.log("⚙️ テスト設定を適用しました。完了済み通知と、その後30秒ごとの超過勤務通知が期待されます。");
+  console.log(
+    "⚙️ テスト設定を適用しました。完了済み通知と、その後30秒ごとの超過勤務通知が期待されます。"
+  );
 
   const completedData = {
     status: "completed",
@@ -211,7 +219,9 @@ runTest("通知オフ設定テスト", async () => {
     `🚫 通知オフ状態でスケジュール: ${noNotificationData.completionTime}`
   );
   notificationManager.scheduleWorkEndNotifications(noNotificationData);
-  console.log("期待される通知: なし。通知が表示されないことを確認してください。");
+  console.log(
+    "期待される通知: なし。通知が表示されないことを確認してください。"
+  );
 });
 // ======================ここまでをコピペ=======================
 
@@ -237,7 +247,9 @@ runTest("カスタム通知時間テスト", async () => {
       resolve
     );
   });
-  console.log("⚙️ カスタム通知設定を適用しました。2分前、1分前、完了時、3分ごとの超過勤務通知が期待されます。");
+  console.log(
+    "⚙️ カスタム通知設定を適用しました。2分前、1分前、完了時、3分ごとの超過勤務通知が期待されます。"
+  );
 
   const workEndData = {
     status: "pending",
@@ -252,7 +264,9 @@ runTest("カスタム通知時間テスト", async () => {
     `📨 退勤通知をスケジュール: 完了予定 ${workEndData.completionTime}`
   );
   notificationManager.scheduleWorkEndNotifications(workEndData);
-  console.log("期待される通知: 2分前、1分前、完了時、その後3分ごとの超過勤務通知。");
+  console.log(
+    "期待される通知: 2分前、1分前、完了時、その後3分ごとの超過勤務通知。"
+  );
 });
 // ======================ここまでをコピペ=======================
 
@@ -278,7 +292,7 @@ runTest("休憩通知のキャンセルテスト", async () => {
   notificationManager.scheduleBreakEndNotification(breakData);
 
   // 少し待ってからキャンセル
-  await new Promise(resolve => setTimeout(resolve, 500)); // 0.5秒待機
+  await new Promise((resolve) => setTimeout(resolve, 500)); // 0.5秒待機
 
   console.log("🚫 休憩通知をキャンセルします。");
   chrome.runtime.sendMessage(
@@ -301,9 +315,15 @@ runTest("休憩通知のキャンセルテスト", async () => {
 // テストケース8: 日付変更時のリセットテスト (手動確認推奨)
 // ===========================ここから====================
 runTest("日付変更時のリセットテスト (手動確認推奨)", async () => {
-  console.log("このテストは手動での確認が必要です。ブラウザの日付を変更するか、翌日に再度実行してください。");
-  console.log("期待される動作: 翌日になると、前日のアラームと設定が自動的にクリアされます。");
-  console.log("現在の勤務日を保存し、翌日にこのテストを再度実行すると、リセットがトリガーされます。");
+  console.log(
+    "このテストは手動での確認が必要です。ブラウザの日付を変更するか、翌日に再度実行してください。"
+  );
+  console.log(
+    "期待される動作: 翌日になると、前日のアラームと設定が自動的にクリアされます。"
+  );
+  console.log(
+    "現在の勤務日を保存し、翌日にこのテストを再度実行すると、リセットがトリガーされます。"
+  );
 
   const today = new Date();
   const tomorrow = new Date(today);
@@ -311,13 +331,21 @@ runTest("日付変更時のリセットテスト (手動確認推奨)", async ()
   const tomorrowDateString = tomorrow.toISOString().split("T")[0];
 
   // 翌日の日付をシミュレートして保存
-  await new Promise(resolve => chrome.storage.local.set({ currentWorkDate: tomorrowDateString }, resolve));
+  await new Promise((resolve) =>
+    chrome.storage.local.set({ currentWorkDate: tomorrowDateString }, resolve)
+  );
 
   // background.jsのinitializeDailyResetを呼び出すことで、日付変更をトリガー
   // ただし、Service Workerのライフサイクルにより自動で実行されるため、ここではシミュレーションのみ
-  console.log(`シミュレーション: 現在の勤務日を ${tomorrowDateString} に設定しました。`);
-  console.log("ブラウザを再起動するか、翌日に再度拡張機能をアクティブにすると、リセット処理が実行されます。");
-  console.log("期待される通知: なし。すべてのアラームがクリアされていることを確認してください。");
+  console.log(
+    `シミュレーション: 現在の勤務日を ${tomorrowDateString} に設定しました。`
+  );
+  console.log(
+    "ブラウザを再起動するか、翌日に再度拡張機能をアクティブにすると、リセット処理が実行されます。"
+  );
+  console.log(
+    "期待される通知: なし。すべてのアラームがクリアされていることを確認してください。"
+  );
 });
 // ======================ここまでをコピペ=======================
 
@@ -326,7 +354,7 @@ runTest("日付変更時のリセットテスト (手動確認推奨)", async ()
 runTest("カスタム勤務時間での完了通知テスト", async () => {
   const now = new Date();
   const testDate = now.toISOString().split("T")[0];
-  const customWorkHours = 3.5; // 3.5時間勤務をテスト
+  const customWorkHours = 3; // 3時間勤務をテスト
 
   // テスト用の設定を一時的に変更
   await new Promise((resolve) => {
@@ -343,14 +371,16 @@ runTest("カスタム勤務時間での完了通知テスト", async () => {
       resolve
     );
   });
-  console.log(`⚙️ テスト設定を適用しました。勤務時間: ${customWorkHours}時間、1分前通知、30秒前通知、30秒ごとの超過勤務通知が期待されます。`);
+  console.log(
+    `⚙️ テスト設定を適用しました。勤務時間: ${customWorkHours}時間、1分前通知、30秒前通知、30秒ごとの超過勤務通知が期待されます。`
+  );
 
   // 完了予定時刻を現在時刻+2分後に設定
   const completionTime = addMinutesToCurrentTime(2);
   const workEndData = {
     status: "pending",
     completionTime: completionTime,
-    actualWorkMinutes: (customWorkHours * 60) - 10, // 予定勤務時間より少し少ない
+    actualWorkMinutes: customWorkHours * 60 - 10, // 予定勤務時間より少し少ない
     remainingMinutes: 10,
     message: `予定勤務完了予定: ${completionTime} (${customWorkHours}時間勤務)`,
     workDate: testDate,
@@ -361,10 +391,18 @@ runTest("カスタム勤務時間での完了通知テスト", async () => {
     `📨 勤務完了通知をスケジュール: 完了予定 ${workEndData.completionTime}`
   );
   notificationManager.scheduleWorkEndNotifications(workEndData);
-  console.log(`期待される通知: ${customWorkHours}時間勤務の1分前通知、30秒前通知、完了時通知、その後30秒ごとの超過勤務通知。`);
+  console.log(
+    `期待される通知: ${customWorkHours}時間勤務の1分前通知、30秒前通知、完了時通知、その後30秒ごとの超過勤務通知。`
+  );
   console.log(`完了時通知タイトル: '予定勤務完了！ (${customWorkHours}時間)'`);
-  console.log(`警告通知メッセージ1: '${customWorkHours}時間勤務完了まで1分です...'`);
-  console.log(`警告通知メッセージ2: '${customWorkHours}時間勤務完了まで0.5分です...'`);
-  console.log(`超過勤務通知メッセージ: '${customWorkHours}時間勤務を約...分超過しています。'`);
+  console.log(
+    `警告通知メッセージ1: '${customWorkHours}時間勤務完了まで1分です...'`
+  );
+  console.log(
+    `警告通知メッセージ2: '${customWorkHours}時間勤務完了まで0.5分です...'`
+  );
+  console.log(
+    `超過勤務通知メッセージ: '${customWorkHours}時間勤務を約...分超過しています。'`
+  );
 });
 // ======================ここまでをコピペ=======================

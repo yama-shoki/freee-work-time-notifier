@@ -416,10 +416,6 @@ class FreeeNotificationManager {
           currentMinutes
         );
         this.lastNotificationData = recalculatedData;
-
-        console.log("保存データを復元しました:", recalculatedData);
-      } else {
-        console.log("復元可能な保存データが見つかりません");
       }
     });
   }
@@ -442,23 +438,35 @@ class FreeeNotificationManager {
 
         if (remainingMinutes > 0) {
           // まだ完了時刻前
-          const breakTimeDisplay = storedData.totalBreakMinutes > 0
-            ? `休憩: ${Math.floor(storedData.totalBreakMinutes / 60)}時間${storedData.totalBreakMinutes % 60}分`
-            : '';
+          const breakTimeDisplay =
+            storedData.totalBreakMinutes > 0
+              ? `休憩: ${Math.floor(storedData.totalBreakMinutes / 60)}時間${
+                  storedData.totalBreakMinutes % 60
+                }分`
+              : "";
 
-          updatedData.message = `8時間完了予定: ${storedData.completionTime} (残り約${Math.floor(remainingMinutes / 60)}時間${remainingMinutes % 60}分)
+          updatedData.message = `8時間完了予定: ${
+            storedData.completionTime
+          } (残り約${Math.floor(remainingMinutes / 60)}時間${
+            remainingMinutes % 60
+          }分)
 ${breakTimeDisplay}
 ※正確な時間と現在のステータスは「修正」ボタンで確認してください`;
           updatedData.remainingMinutes = remainingMinutes;
         } else {
           // 完了時刻を過ぎている - 超過勤務状態（但し勤務中）
           const overtimeMinutes = currentMinutes - completionMinutes;
-          const breakTimeDisplay = storedData.totalBreakMinutes > 0
-            ? `休憩: ${Math.floor(storedData.totalBreakMinutes / 60)}時間${storedData.totalBreakMinutes % 60}分`
-            : '';
+          const breakTimeDisplay =
+            storedData.totalBreakMinutes > 0
+              ? `休憩: ${Math.floor(storedData.totalBreakMinutes / 60)}時間${
+                  storedData.totalBreakMinutes % 60
+                }分`
+              : "";
 
           updatedData.status = "completed";
-          updatedData.message = `8時間勤務完了済み（約${Math.floor(overtimeMinutes / 60)}時間${overtimeMinutes % 60}分超過）
+          updatedData.message = `8時間勤務完了済み（約${Math.floor(
+            overtimeMinutes / 60
+          )}時間${overtimeMinutes % 60}分超過）
 ${breakTimeDisplay}
 ※正確な時間と現在のステータスは「修正」ボタンで確認してください`;
           updatedData.overtimeMinutes = overtimeMinutes;
@@ -466,11 +474,16 @@ ${breakTimeDisplay}
       } else if (storedData.status === "completed") {
         // 既に完了済みで勤務中の場合、超過時間を再計算
         const overtimeMinutes = currentMinutes - completionMinutes;
-        const breakTimeDisplay = storedData.totalBreakMinutes > 0
-          ? `休憩: ${Math.floor(storedData.totalBreakMinutes / 60)}時間${storedData.totalBreakMinutes % 60}分`
-          : '';
+        const breakTimeDisplay =
+          storedData.totalBreakMinutes > 0
+            ? `休憩: ${Math.floor(storedData.totalBreakMinutes / 60)}時間${
+                storedData.totalBreakMinutes % 60
+              }分`
+            : "";
 
-        updatedData.message = `8時間勤務完了済み（約${Math.floor(overtimeMinutes / 60)}時間${overtimeMinutes % 60}分超過）
+        updatedData.message = `8時間勤務完了済み（約${Math.floor(
+          overtimeMinutes / 60
+        )}時間${overtimeMinutes % 60}分超過）
 ${breakTimeDisplay}
 ※正確な時間と現在のステータスは「修正」ボタンで確認してください`;
         updatedData.overtimeMinutes = overtimeMinutes;
@@ -521,34 +534,45 @@ ${breakTimeDisplay}
       let totalBreakMinutes = storedData?.totalBreakMinutes || 0;
 
       // 最新の休憩開始時刻を推定（現在の休憩時間計算用）
-      if (this.lastNotificationData?.type === 'breakStart') {
+      if (this.lastNotificationData?.type === "breakStart") {
         // 休憩開始データから現在の休憩時間を計算
-        const breakStartTime = this.lastNotificationData.breakStartTime ||
-                             `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+        const breakStartTime =
+          this.lastNotificationData.breakStartTime ||
+          `${now.getHours().toString().padStart(2, "0")}:${now
+            .getMinutes()
+            .toString()
+            .padStart(2, "0")}`;
         const breakStartMinutes = this.timeToMinutes(breakStartTime);
         currentBreakMinutes = Math.max(0, currentMinutes - breakStartMinutes);
       }
 
-      const breakTimeDisplay = totalBreakMinutes > 0
-        ? `合計休憩: ${Math.floor(totalBreakMinutes / 60)}時間${totalBreakMinutes % 60}分`
-        : '';
+      const breakTimeDisplay =
+        totalBreakMinutes > 0
+          ? `合計休憩: ${Math.floor(totalBreakMinutes / 60)}時間${
+              totalBreakMinutes % 60
+            }分`
+          : "";
 
-      const currentBreakDisplay = currentBreakMinutes > 0
-        ? `現在の休憩: ${Math.floor(currentBreakMinutes / 60)}時間${currentBreakMinutes % 60}分`
-        : '現在休憩中です';
+      const currentBreakDisplay =
+        currentBreakMinutes > 0
+          ? `現在の休憩: ${Math.floor(currentBreakMinutes / 60)}時間${
+              currentBreakMinutes % 60
+            }分`
+          : "現在休憩中です";
 
-      const message = currentBreakMinutes > 0 && totalBreakMinutes > 0
-        ? `${currentBreakDisplay}\n${breakTimeDisplay}`
-        : currentBreakMinutes > 0
-        ? currentBreakDisplay
-        : totalBreakMinutes > 0
-        ? `現在休憩中です\n${breakTimeDisplay}`
-        : '現在休憩中です';
+      const message =
+        currentBreakMinutes > 0 && totalBreakMinutes > 0
+          ? `${currentBreakDisplay}\n${breakTimeDisplay}`
+          : currentBreakMinutes > 0
+          ? currentBreakDisplay
+          : totalBreakMinutes > 0
+          ? `現在休憩中です\n${breakTimeDisplay}`
+          : "現在休憩中です";
 
       callback({
         message: message,
         currentBreakMinutes: currentBreakMinutes,
-        totalBreakMinutes: totalBreakMinutes
+        totalBreakMinutes: totalBreakMinutes,
       });
     });
   }
@@ -606,9 +630,16 @@ ${breakTimeDisplay}
       button.addEventListener("click", () => {
         // 少し遅延させて、freee側の処理完了を待つ
         setTimeout(() => {
-          this.showBreakTimeDialog();
+          this.initiateBreakDialog();
         }, 500);
       });
+    });
+  }
+
+  // 休憩ダイアログの初期化
+  initiateBreakDialog() {
+    this.calculateCurrentBreakTime((breakInfo) => {
+      this.showBreakTimeDialog(breakInfo.totalBreakMinutes);
     });
   }
 
@@ -720,12 +751,19 @@ ${breakTimeDisplay}
   }
 
   // 休憩時間選択ダイアログを表示
-  showBreakTimeDialog() {
+  showBreakTimeDialog(totalBreakMinutes) {
     // 既存のダイアログがある場合は削除
     const existingDialog = document.getElementById("freee-break-dialog");
     if (existingDialog) {
       existingDialog.remove();
     }
+
+    const totalBreakHours = Math.floor(totalBreakMinutes / 60);
+    const totalBreakMins = totalBreakMinutes % 60;
+    const breakTimeMessage =
+      totalBreakMinutes > 0
+        ? `現在の合計休憩: ${totalBreakHours}時間${totalBreakMins}分`
+        : "現在、合計休憩時間はありません";
 
     // ダイアログHTML
     const dialogHTML = `
@@ -745,37 +783,47 @@ ${breakTimeDisplay}
       ">
         <div style="text-align: center; margin-bottom: 20px;">
           <h3 style="margin: 0; color: #333;">☕ 休憩時間の設定</h3>
+          <p style="font-size: 12px; color: #666; margin-top: 5px;">${breakTimeMessage}</p>
         </div>
 
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 8px; font-weight: bold;">休憩時間:</label>
-          <select id="break-duration-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            <option value="10">10分</option>
-            <option value="15">15分</option>
-            <option value="30" selected>30分</option>
-            <option value="45">45分</option>
-            <option value="60">1時間</option>
-            <option value="90">1時間30分</option>
-            <option value="custom">カスタム入力</option>
-          </select>
+        <div id="break-notification-settings">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">休憩時間:</label>
+            <select id="break-duration-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+              <option value="10">10分</option>
+              <option value="15">15分</option>
+              <option value="30" selected>30分</option>
+              <option value="45">45分</option>
+              <option value="60">1時間</option>
+              <option value="90">1時間30分</option>
+              <option value="custom">カスタム入力</option>
+            </select>
+          </div>
+
+          <div id="custom-duration-input" style="margin-bottom: 15px; display: none;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">カスタム時間（分）:</label>
+            <input type="number" id="custom-duration" min="1" max="480" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">通知タイミング:</label>
+            <select id="break-warning-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+              <option value="10">10分前</option>
+              <option value="5" selected>5分前</option>
+              <option value="3">3分前</option>
+              <option value="1">1分前</option>
+            </select>
+          </div>
         </div>
 
-        <div id="custom-duration-input" style="margin-bottom: 15px; display: none;">
-          <label style="display: block; margin-bottom: 8px; font-weight: bold;">カスタム時間（分）:</label>
-          <input type="number" id="custom-duration" min="1" max="480" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+        <div style="margin-top: 20px;">
+          <label style="display: flex; align-items: center; cursor: pointer;">
+            <input type="checkbox" id="break-no-notification" style="margin-right: 8px;">
+            休憩終了の通知をしない
+          </label>
         </div>
 
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 8px; font-weight: bold;">通知タイミング:</label>
-          <select id="break-warning-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            <option value="10">10分前</option>
-            <option value="5" selected>5分前</option>
-            <option value="3">3分前</option>
-            <option value="1">1分前</option>
-          </select>
-        </div>
-
-        <div style="text-align: center;">
+        <div style="text-align: center; margin-top: 20px;">
           <button id="break-dialog-ok" style="
             background: #4CAF50;
             color: white;
@@ -825,6 +873,10 @@ ${breakTimeDisplay}
     const okButton = document.getElementById("break-dialog-ok");
     const cancelButton = document.getElementById("break-dialog-cancel");
     const overlay = document.getElementById("freee-break-overlay");
+    const noNotifyCheckbox = document.getElementById("break-no-notification");
+    const notificationSettings = document.getElementById(
+      "break-notification-settings"
+    );
 
     // カスタム入力の表示/非表示
     durationSelect.addEventListener("change", () => {
@@ -836,23 +888,33 @@ ${breakTimeDisplay}
       }
     });
 
+    // 通知しないチェックボックスの制御
+    noNotifyCheckbox.addEventListener("change", () => {
+      notificationSettings.style.display = noNotifyCheckbox.checked
+        ? "none"
+        : "block";
+    });
+
     // OKボタン
     okButton.addEventListener("click", () => {
-      let duration = parseInt(durationSelect.value);
-      if (durationSelect.value === "custom") {
-        duration = parseInt(customDuration.value);
-        if (!duration || duration < 1 || duration > 480) {
-          alert("カスタム時間は1分〜480分の範囲で入力してください");
-          return;
+      const noNotify = noNotifyCheckbox.checked;
+
+      if (noNotify) {
+        this.sendBreakStartNotification(0, 0);
+      } else {
+        let duration = parseInt(durationSelect.value);
+        if (durationSelect.value === "custom") {
+          duration = parseInt(customDuration.value);
+          if (!duration || duration < 1 || duration > 480) {
+            alert("カスタム時間は1分〜480分の範囲で入力してください");
+            return;
+          }
         }
+        const warningTime = parseInt(
+          document.getElementById("break-warning-select").value
+        );
+        this.scheduleBreakNotification(duration, warningTime);
       }
-
-      const warningTime = parseInt(
-        document.getElementById("break-warning-select").value
-      );
-
-      // 休憩通知をスケジュール
-      this.scheduleBreakNotification(duration, warningTime);
 
       // ダイアログを閉じる
       this.closeBreakDialog();
@@ -905,9 +967,6 @@ ${breakTimeDisplay}
       if (chrome.runtime.lastError) {
         console.error("休憩通知スケジュールエラー:", chrome.runtime.lastError);
       } else if (response && response.success) {
-        console.log(
-          `休憩通知をスケジュールしました: ${duration}分休憩、${warningTime}分前通知`
-        );
       }
     });
 
@@ -918,7 +977,17 @@ ${breakTimeDisplay}
   // 休憩開始時の状態通知
   sendBreakStartNotification(duration, warningTime) {
     const now = new Date();
-    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
+
+    let message = "休憩開始しました";
+    if (duration > 0) {
+      const notificationMessage =
+        warningTime > 0 ? `、${warningTime}分前に通知` : "";
+      message += ` (${duration}分の予定${notificationMessage})`;
+    }
 
     const breakStartInfo = {
       type: "breakStart",
@@ -926,7 +995,7 @@ ${breakTimeDisplay}
       duration: duration,
       warningTime: warningTime,
       breakStartTime: currentTime, // 休憩開始時刻を追加
-      message: `休憩開始しました (${duration}分の予定、${warningTime}分前に通知)`,
+      message: message,
       workDate: this.getTodayDateString(),
     };
 

@@ -4,21 +4,33 @@
 document.addEventListener("DOMContentLoaded", () => {
   const statusElement = document.getElementById("status");
   const enableNotification1 = document.getElementById("enable-notification-1");
-  const notification1Setting = document.getElementById("notification-1-setting");
+  const notification1Setting = document.getElementById(
+    "notification-1-setting"
+  );
   const warningTime1 = document.getElementById("warning-time-1");
-  const customWarning1Setting = document.getElementById("custom-warning-1-setting");
+  const customWarning1Setting = document.getElementById(
+    "custom-warning-1-setting"
+  );
   const customWarning1 = document.getElementById("custom-warning-1");
   const enableNotification2 = document.getElementById("enable-notification-2");
-  const notification2Setting = document.getElementById("notification-2-setting");
+  const notification2Setting = document.getElementById(
+    "notification-2-setting"
+  );
   const warningTime2 = document.getElementById("warning-time-2");
-  const customWarning2Setting = document.getElementById("custom-warning-2-setting");
+  const customWarning2Setting = document.getElementById(
+    "custom-warning-2-setting"
+  );
   const customWarning2 = document.getElementById("custom-warning-2");
   const enableOvertimeNotifications = document.getElementById(
     "enable-overtime-notifications"
   );
   const overtimeInterval = document.getElementById("overtime-interval");
-  const overtimeIntervalSetting = document.getElementById("overtime-interval-setting");
-  const customOvertimeSetting = document.getElementById("custom-overtime-setting");
+  const overtimeIntervalSetting = document.getElementById(
+    "overtime-interval-setting"
+  );
+  const customOvertimeSetting = document.getElementById(
+    "custom-overtime-setting"
+  );
   const customOvertime = document.getElementById("custom-overtime");
 
   // 設定を読み込み
@@ -73,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   customWarning2.addEventListener("input", saveSettings);
 
-
   enableOvertimeNotifications.addEventListener("change", () => {
     const isEnabled = enableOvertimeNotifications.checked;
     overtimeInterval.disabled = !isEnabled;
@@ -88,7 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!isEnabled) {
       // アラームを解除する
       chrome.alarms.clear("overtime-notifier");
-      console.log("超過勤務通知アラームを解除しました。");
     }
     saveSettings();
   });
@@ -128,24 +138,43 @@ document.addEventListener("DOMContentLoaded", () => {
         customWarning1.value = items.customWarning1;
         warningTime1.disabled = !items.enableNotification1;
         customWarning1.disabled = !items.enableNotification1;
-        notification1Setting.classList.toggle("hidden", !items.enableNotification1);
-        customWarning1Setting.style.display = (items.enableNotification1 && items.warningTime1 === "custom") ? "block" : "none";
+        notification1Setting.classList.toggle(
+          "hidden",
+          !items.enableNotification1
+        );
+        customWarning1Setting.style.display =
+          items.enableNotification1 && items.warningTime1 === "custom"
+            ? "block"
+            : "none";
 
         enableNotification2.checked = items.enableNotification2;
         warningTime2.value = items.warningTime2;
         customWarning2.value = items.customWarning2;
         warningTime2.disabled = !items.enableNotification2;
         customWarning2.disabled = !items.enableNotification2;
-        notification2Setting.classList.toggle("hidden", !items.enableNotification2);
-        customWarning2Setting.style.display = (items.enableNotification2 && items.warningTime2 === "custom") ? "block" : "none";
+        notification2Setting.classList.toggle(
+          "hidden",
+          !items.enableNotification2
+        );
+        customWarning2Setting.style.display =
+          items.enableNotification2 && items.warningTime2 === "custom"
+            ? "block"
+            : "none";
 
         enableOvertimeNotifications.checked = items.enableOvertimeNotifications;
         overtimeInterval.value = items.overtimeInterval;
         customOvertime.value = items.customOvertime;
         overtimeInterval.disabled = !items.enableOvertimeNotifications;
         customOvertime.disabled = !items.enableOvertimeNotifications;
-        overtimeIntervalSetting.classList.toggle("hidden", !items.enableOvertimeNotifications);
-        customOvertimeSetting.style.display = (items.enableOvertimeNotifications && items.overtimeInterval === "custom") ? "block" : "none";
+        overtimeIntervalSetting.classList.toggle(
+          "hidden",
+          !items.enableOvertimeNotifications
+        );
+        customOvertimeSetting.style.display =
+          items.enableOvertimeNotifications &&
+          items.overtimeInterval === "custom"
+            ? "block"
+            : "none";
       }
     );
   }
@@ -154,13 +183,22 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveSettings() {
     const settings = {
       enableNotification1: enableNotification1.checked,
-      warningTime1: warningTime1.value === "custom" ? "custom" : parseInt(warningTime1.value),
+      warningTime1:
+        warningTime1.value === "custom"
+          ? "custom"
+          : parseInt(warningTime1.value),
       customWarning1: parseInt(customWarning1.value) || 25,
       enableNotification2: enableNotification2.checked,
-      warningTime2: warningTime2.value === "custom" ? "custom" : parseInt(warningTime2.value),
+      warningTime2:
+        warningTime2.value === "custom"
+          ? "custom"
+          : parseInt(warningTime2.value),
       customWarning2: parseInt(customWarning2.value) || 2,
       enableOvertimeNotifications: enableOvertimeNotifications.checked,
-      overtimeInterval: overtimeInterval.value === "custom" ? "custom" : parseInt(overtimeInterval.value),
+      overtimeInterval:
+        overtimeInterval.value === "custom"
+          ? "custom"
+          : parseInt(overtimeInterval.value),
       customOvertime: parseInt(customOvertime.value) || 45,
     };
 
@@ -213,11 +251,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // 休憩時間の詳細を追加
                 if (workData && workData.totalBreakMinutes !== undefined) {
-                  const breakHours = Math.floor(workData.totalBreakMinutes / 60);
+                  const breakHours = Math.floor(
+                    workData.totalBreakMinutes / 60
+                  );
                   const breakMins = workData.totalBreakMinutes % 60;
 
                   if (workData.totalBreakMinutes > 0) {
-                    detailInfo += `<br>休憩: ${breakHours > 0 ? breakHours + '時間' : ''}${breakMins}分`;
+                    detailInfo += `<br>休憩: ${
+                      breakHours > 0 ? breakHours + "時間" : ""
+                    }${breakMins}分`;
                   }
                 }
 

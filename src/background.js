@@ -22,7 +22,8 @@ class NotificationManager {
       this.handleAlarm(alarm);
     });
 
-    // インストール時の初期化
+    // ストレージ変更を監視
+    chrome.storage.onChanged.addListener(this.handleStorageChange.bind(this));
     chrome.runtime.onInstalled.addListener(() => {
       console.log("拡張機能がインストールされました");
       this.createNotificationPermission();
@@ -50,7 +51,7 @@ class NotificationManager {
         sendResponse({ success: true });
         break;
       case "scheduleBreakEndNotification":
-        this.scheduleBreakEndNotification(message.data);
+        this.scheduleBreakEndNotifications(message.data);
         sendResponse({ success: true });
         break;
       case "cancelBreakNotifications":
@@ -71,6 +72,7 @@ class NotificationManager {
         break;
       default:
         console.log("不明なメッセージタイプ:", message.type);
+        break;
     }
   }
 
@@ -80,8 +82,6 @@ class NotificationManager {
       const level = await new Promise((resolve) => {
         chrome.notifications.getPermissionLevel(resolve);
       });
-
-      console.log("通知権限レベル:", level);
 
       if (level !== "granted") {
         console.warn(
@@ -93,6 +93,55 @@ class NotificationManager {
     } catch (error) {
       console.error("通知権限チェックエラー:", error);
       return false;
+    }
+  }
+
+  // ストレージ変更ハンドラー
+  handleStorageChange(changes, areaName) {
+    if (areaName === "sync") {
+      const overtimeSettingsChanged =
+        changes.enableOvertimeNotifications ||
+        changes.overtimeInterval ||
+        changes.customOvertime;
+
+      if (overtimeSettingsChanged) {
+        chrome.storage.sync.get(
+          {
+            enableOvertimeNotifications: false,
+            overtimeInterval: 30,
+            customOvertime: 45,
+          },
+          (items) => {
+            if (items.enableOvertimeNotifications) {
+              chrome.storage.local.get(
+                "completionTimeForOvertime",
+                (result) => {
+                  const completionTime = result.completionTimeForOvertime;
+                  if (completionTime) {
+                    // Only reschedule if 8 hours were already completed
+                    const actualInterval =
+                      items.overtimeInterval === "custom"
+                        ? items.customOvertime
+                        : parseInt(items.overtimeInterval);
+
+                    // Clear existing overtime alarm
+                    chrome.alarms.clear("overtime-notifier");
+
+                    // Reschedule with new interval
+                    chrome.alarms.create("overtime-notifier", {
+                      delayInMinutes: actualInterval,
+                      periodInMinutes: actualInterval,
+                    });
+                  }
+                }
+              );
+            } else {
+              // Overtime notifications disabled, clear alarm
+              chrome.alarms.clear("overtime-notifier");
+            }
+          }
+        );
+      }
     }
   }
 
@@ -140,12 +189,27 @@ class NotificationManager {
           customOvertime: 45,
         },
         (items) => {
-          const { enableNotification1, warningTime1, customWarning1, enableNotification2, warningTime2, customWarning2, enableOvertimeNotifications, overtimeInterval, customOvertime } = items;
+          const {
+            enableNotification1,
+            warningTime1,
+            customWarning1,
+            enableNotification2,
+            warningTime2,
+            customWarning2,
+            enableOvertimeNotifications,
+            overtimeInterval,
+            customOvertime,
+          } = items;
 
           // カスタム時間の解決
-          const actualWarningTime1 = warningTime1 === "custom" ? customWarning1 : parseInt(warningTime1);
-          const actualWarningTime2 = warningTime2 === "custom" ? customWarning2 : parseInt(warningTime2);
-          const actualOvertimeInterval = overtimeInterval === "custom" ? customOvertime : parseInt(overtimeInterval);
+          const actualWarningTime1 =
+            warningTime1 === "custom" ? customWarning1 : parseInt(warningTime1);
+          const actualWarningTime2 =
+            warningTime2 === "custom" ? customWarning2 : parseInt(warningTime2);
+          const actualOvertimeInterval =
+            overtimeInterval === "custom"
+              ? customOvertime
+              : parseInt(overtimeInterval);
 
           const now = new Date();
           const currentTime = now.getHours() * 60 + now.getMinutes();
@@ -205,11 +269,12 @@ class NotificationManager {
             notificationSummary += `\n超過勤務: オフ`;
           }
 
-
           this.showImmediateNotification({
             type: "status",
             title: "退勤通知設定完了",
-            message: `${this.getTodayDateString()}の通知をセットしました\n完了予定: ${completionInfo.completionTime}${notificationSummary}`,
+            message: `${this.getTodayDateString()}の通知をセットしました\n完了予定: ${
+              completionInfo.completionTime
+            }${notificationSummary}`,
             iconUrl: chrome.runtime.getURL("icons/icon48.png"),
           });
         }
@@ -267,12 +332,6 @@ class NotificationManager {
         warningTime: warningTime,
         breakEndTime: this.minutesToTime(breakEndMinutes),
       });
-
-      console.log(
-        `休憩終了通知をスケジュールしました: ${breakStartTime}開始、${this.minutesToTime(
-          notificationMinutes
-        )}に${warningTime}分前通知`
-      );
     }
   }
 
@@ -284,11 +343,10 @@ class NotificationManager {
     chrome.alarms.getAll((alarms) => {
       alarms.forEach((alarm) => {
         // 休憩関連のアラーム名パターンをチェック
-        if (alarm.name.includes('break_') && alarm.name.startsWith(workDate)) {
+        if (alarm.name.includes("break_") && alarm.name.startsWith(workDate)) {
           chrome.alarms.clear(alarm.name);
           chrome.storage.local.remove(`alarm_${alarm.name}`);
           this.activeAlarms.delete(alarm.name);
-          console.log(`休憩通知をキャンセルしました: ${alarm.name}`);
         }
       });
     });
@@ -352,6 +410,7 @@ class NotificationManager {
   handleAlarm(alarm) {
     // 超過勤務通知の処理
     if (alarm.name === "overtime-notifier") {
+      console.log("超過勤務アラーム発火！"); // 追加
       chrome.storage.local.get("completionTimeForOvertime", (result) => {
         const completionTime = result.completionTimeForOvertime;
         if (completionTime) {
@@ -359,6 +418,10 @@ class NotificationManager {
           const now = new Date();
           const currentMinutes = now.getHours() * 60 + now.getMinutes();
           const overtimeMinutes = currentMinutes - completionMinutes;
+
+          console.log(
+            `完了時刻(分): ${completionMinutes}, 現在時刻(分): ${currentMinutes}, 超過時間(分): ${overtimeMinutes}`
+          ); // 追加
 
           if (overtimeMinutes > 0) {
             this.showNotification({
@@ -368,7 +431,11 @@ class NotificationManager {
               iconUrl: chrome.runtime.getURL("icons/icon48.png"),
               requireInteraction: false,
             });
+          } else {
+            console.log("超過勤務時間0以下、通知スキップ"); // 追加
           }
+        } else {
+          console.log("completionTimeForOvertimeが設定されていません"); // 追加
         }
       });
       return; // 他の処理は行わない
@@ -427,6 +494,11 @@ class NotificationManager {
               customOvertime: 45,
             },
             (items) => {
+              // 超過時間計算のために完了時刻を保存 (条件ブロックの外に移動)
+              chrome.storage.local.set({
+                completionTimeForOvertime: alarmData.completionTime,
+              });
+
               if (items.enableOvertimeNotifications) {
                 // カスタム時間の解決
                 const actualInterval =
@@ -434,19 +506,11 @@ class NotificationManager {
                     ? items.customOvertime
                     : parseInt(items.overtimeInterval);
 
-                // 超過時間計算のために完了時刻を保存
-                chrome.storage.local.set({
-                  completionTimeForOvertime: alarmData.completionTime,
-                });
-
                 // 定期的なアラームを作成
                 chrome.alarms.create("overtime-notifier", {
                   delayInMinutes: actualInterval,
                   periodInMinutes: actualInterval,
                 });
-                console.log(
-                  `超過勤務通知を${actualInterval}分ごとに設定しました。`
-                );
               }
             }
           );
@@ -460,7 +524,7 @@ class NotificationManager {
   }
   // 即座に通知を表示
   showImmediateNotification(options) {
-    if (!options || typeof options !== 'object') {
+    if (!options || typeof options !== "object") {
       console.error("無効な通知オプション:", options);
       return;
     }
@@ -504,10 +568,6 @@ class NotificationManager {
       setTimeout(() => {
         chrome.notifications.clear(notificationId, (wasCleared) => {
           if (wasCleared) {
-            console.log(
-              `通知を自動消去しました (${autoDismissDelay / 1000}秒後):`,
-              notificationId
-            );
           }
         });
       }, autoDismissDelay);
@@ -521,7 +581,7 @@ class NotificationManager {
     chrome.alarms.getAll((alarms) => {
       alarms.forEach((alarm) => {
         // 休憩関連のアラームは保持する
-        if (!alarm.name.includes('break_')) {
+        if (!alarm.name.includes("break_")) {
           chrome.alarms.clear(alarm.name);
           chrome.storage.local.remove(`alarm_${alarm.name}`);
           this.activeAlarms.delete(alarm.name);
@@ -539,7 +599,6 @@ class NotificationManager {
       });
     });
     this.activeAlarms.clear();
-    console.log("全てのアラームをクリアしました");
   }
 
   // 日付チェックと毎日リセット初期化
@@ -549,7 +608,6 @@ class NotificationManager {
       const today = this.getTodayDateString();
 
       if (storedDate && storedDate !== today) {
-        console.log(`日付変更検出: ${storedDate} → ${today}`);
         this.resetForNewDay();
       }
 
@@ -562,7 +620,6 @@ class NotificationManager {
     const today = this.getTodayDateString();
 
     if (this.currentWorkDate && this.currentWorkDate !== today) {
-      console.log(`日付変更検出: ${this.currentWorkDate} → ${today}`);
       this.resetForNewDay();
     }
   }
@@ -580,7 +637,7 @@ class NotificationManager {
     chrome.storage.local.remove([
       "currentWorkDate",
       `workData_${yesterday}`,
-      "completionTimeForOvertime"
+      "completionTimeForOvertime",
     ]);
 
     console.log("前日のアラームと設定をクリアしました");

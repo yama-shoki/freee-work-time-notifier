@@ -290,45 +290,61 @@ class FreeeNotificationManager {
     // 今日の日付とタイムスタンプを含めた比較で重複チェック
     const today = this.getTodayDateString();
     const now = new Date();
-    const dataWithDate = {
-      ...completionInfo,
-      workDate: today,
-    };
 
-    if (
-      JSON.stringify(dataWithDate) === JSON.stringify(this.lastNotificationData)
-    ) {
-      console.log("同じ日の同じデータのため送信をスキップ");
-      return;
-    }
+    // 現在の通知設定を取得して含める
+    chrome.storage.sync.get({
+      enableNotification1: true,
+      warningTime1: 10,
+      customWarning1: 25,
+      enableNotification2: true,
+      warningTime2: 1,
+      customWarning2: 2,
+      enableOvertimeNotifications: false,
+      overtimeInterval: 30,
+      customOvertime: 45,
+    }, (settings) => {
+      const dataWithDateAndSettings = {
+        ...completionInfo,
+        workDate: today,
+        notificationSettings: settings, // 通知設定を含める
+      };
 
-    this.lastNotificationData = dataWithDate;
+      // 設定も含めて重複チェック
+      if (
+        JSON.stringify(dataWithDateAndSettings) === JSON.stringify(this.lastNotificationData)
+      ) {
+        console.log("同じ日の同じデータかつ同じ設定のため送信をスキップ");
+        return;
+      }
 
-    // storage.localにも保存（復元用）
-    chrome.storage.local.set({
-      [`workData_${today}`]: dataWithDate,
-    });
+      this.lastNotificationData = dataWithDateAndSettings;
 
-    // Service Workerが休眠している可能性があるため、送信を試行
-    try {
-      chrome.runtime.sendMessage({
-        type: "scheduleWorkEndNotification",
-        data: dataWithDate,
-      }, (response) => {
-        if (chrome.runtime.lastError) {
-          console.error("バックグラウンドへの送信エラー:", chrome.runtime.lastError);
-          // Service Workerが応答しない場合、再試行
-          setTimeout(() => {
-            chrome.runtime.sendMessage({
-              type: "scheduleWorkEndNotification",
-              data: dataWithDate,
-            });
-          }, 100);
-        }
+      // storage.localにも保存（復元用）
+      chrome.storage.local.set({
+        [`workData_${today}`]: dataWithDateAndSettings,
       });
-    } catch (error) {
-      console.error("メッセージ送信でエラー:", error);
-    }
+
+      // Service Workerが休眠している可能性があるため、送信を試行
+      try {
+        chrome.runtime.sendMessage({
+          type: "scheduleWorkEndNotification",
+          data: dataWithDateAndSettings,
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("バックグラウンドへの送信エラー:", chrome.runtime.lastError);
+            // Service Workerが応答しない場合、再試行
+            setTimeout(() => {
+              chrome.runtime.sendMessage({
+                type: "scheduleWorkEndNotification",
+                data: dataWithDateAndSettings,
+              });
+            }, 100);
+          }
+        });
+      } catch (error) {
+        console.error("メッセージ送信でエラー:", error);
+      }
+    });
   }
 
   // ユーティリティ関数: 時間文字列（HH:mm）を分に変換

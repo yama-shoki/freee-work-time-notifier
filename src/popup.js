@@ -243,27 +243,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 statusElement.className = "status inactive";
               } else if (workData && workData.status === "on_break") {
                 // 休憩中の表示
-                statusElement.innerHTML = `☕ ${workData.message}`;
+                statusElement.innerHTML = `☕ ${workData.message.replace(
+                  /\n/g,
+                  "<br>"
+                )}<br><small>正確な時間は「修正」ボタンで更新してください。</small>`;
+                statusElement.className = "status active";
+              } else if (workData && workData.status === "completed") {
+                // 8時間勤務完了済み（超過勤務中）の表示
+                let detailInfo = `<small>${response.workTime.replace(
+                  /\n/g,
+                  "<br>"
+                )}</small>`;
+                statusElement.innerHTML = `✅ ${detailInfo}`;
                 statusElement.className = "status active";
               } else {
-                // 勤務中の表示
-                let detailInfo = `<small>${response.workTime}`;
-
-                // 休憩時間の詳細を追加
-                if (workData && workData.totalBreakMinutes !== undefined) {
-                  const breakHours = Math.floor(
-                    workData.totalBreakMinutes / 60
-                  );
-                  const breakMins = workData.totalBreakMinutes % 60;
-
-                  if (workData.totalBreakMinutes > 0) {
-                    detailInfo += `<br>休憩: ${
-                      breakHours > 0 ? breakHours + "時間" : ""
-                    }${breakMins}分`;
-                  }
-                }
-
-                detailInfo += `</small>`;
+                // 勤務中（pending）の表示
+                let detailInfo = `<small>${response.workTime.replace(
+                  /\n/g,
+                  "<br>"
+                )}</small>`;
                 statusElement.innerHTML = `✅ 勤務中<br>${detailInfo}`;
                 statusElement.className = "status active";
               }

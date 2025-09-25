@@ -262,6 +262,12 @@ class FreeeNotificationManager {
         this.EIGHT_HOURS_MINUTES + totalBreakMinutes
       );
 
+      const breakTimeDisplay =
+        totalBreakMinutes > 0
+          ? `\n休憩: ${Math.floor(totalBreakMinutes / 60)}時間${
+              totalBreakMinutes % 60
+            }分`
+          : "";
       return {
         status: "completed",
         completionTime: completionTime,
@@ -270,7 +276,7 @@ class FreeeNotificationManager {
         totalBreakMinutes: totalBreakMinutes,
         message: `8時間勤務完了済み（${Math.floor(overtimeMinutes / 60)}時間${
           overtimeMinutes % 60
-        }分超過）`,
+        }分超過）${breakTimeDisplay}\n※正確な時間と現在のステータスは「修正」ボタンで確認してください`,
       };
     } else {
       // まだ8時間未完了
@@ -279,6 +285,12 @@ class FreeeNotificationManager {
         currentMinutes + remainingMinutes
       );
 
+      const breakTimeDisplay =
+        totalBreakMinutes > 0
+          ? `\n休憩: ${Math.floor(totalBreakMinutes / 60)}時間${
+              totalBreakMinutes % 60
+            }分`
+          : "";
       return {
         status: "pending",
         completionTime: completionTime,
@@ -287,7 +299,7 @@ class FreeeNotificationManager {
         totalBreakMinutes: totalBreakMinutes,
         message: `8時間完了予定: ${completionTime} (残り${Math.floor(
           remainingMinutes / 60
-        )}時間${remainingMinutes % 60}分)`,
+        )}時間${remainingMinutes % 60}分)${breakTimeDisplay}\n※正確な時間と現在のステータスは「修正」ボタンで確認してください`,
       };
     }
   }
@@ -783,7 +795,7 @@ ${breakTimeDisplay}
       ">
         <div style="text-align: center; margin-bottom: 20px;">
           <h3 style="margin: 0; color: #333;">☕ 休憩時間の設定</h3>
-          <p style="font-size: 12px; color: #666; margin-top: 5px;">${breakTimeMessage}</p>
+          <p style="font-size: 14px; color: #4CAF50; font-weight: bold; margin-top: 5px;">${breakTimeMessage}</p>
         </div>
 
         <div id="break-notification-settings">

@@ -51,7 +51,7 @@ class NotificationManager {
         sendResponse({ success: true });
         break;
       case "scheduleBreakEndNotification":
-        this.scheduleBreakEndNotifications(message.data);
+        this.scheduleBreakEndNotification(message.data);
         sendResponse({ success: true });
         break;
       case "cancelBreakNotifications":
@@ -304,11 +304,6 @@ class NotificationManager {
         type: "break_end_exact",
         breakEndTime: this.minutesToTime(breakEndMinutes),
       });
-      console.log(
-        `休憩終了時刻の通知をスケジュールしました: ${this.minutesToTime(
-          breakEndMinutes
-        )}`
-      );
     }
 
     // 通知時刻を計算（休憩終了の○分前）
@@ -410,7 +405,6 @@ class NotificationManager {
   handleAlarm(alarm) {
     // 超過勤務通知の処理
     if (alarm.name === "overtime-notifier") {
-      console.log("超過勤務アラーム発火！"); // 追加
       chrome.storage.local.get("completionTimeForOvertime", (result) => {
         const completionTime = result.completionTimeForOvertime;
         if (completionTime) {
@@ -418,10 +412,6 @@ class NotificationManager {
           const now = new Date();
           const currentMinutes = now.getHours() * 60 + now.getMinutes();
           const overtimeMinutes = currentMinutes - completionMinutes;
-
-          console.log(
-            `完了時刻(分): ${completionMinutes}, 現在時刻(分): ${currentMinutes}, 超過時間(分): ${overtimeMinutes}`
-          ); // 追加
 
           if (overtimeMinutes > 0) {
             this.showNotification({
@@ -431,14 +421,9 @@ class NotificationManager {
               iconUrl: chrome.runtime.getURL("icons/icon48.png"),
               requireInteraction: false,
             });
-          } else {
-            console.log("超過勤務時間0以下、通知スキップ"); // 追加
           }
-        } else {
-          console.log("completionTimeForOvertimeが設定されていません"); // 追加
         }
       });
-      return; // 他の処理は行わない
     }
 
     // 通常のアラーム処理

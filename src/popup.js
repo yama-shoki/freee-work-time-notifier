@@ -139,7 +139,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 statusElement.className = "status active";
               } else {
                 // 勤務中の表示
-                statusElement.innerHTML = `✅ 勤務中<br><small>${response.workTime}</small>`;
+                let detailInfo = `<small>${response.workTime}`;
+
+                // 休憩時間の詳細を追加
+                if (workData && workData.totalBreakMinutes !== undefined) {
+                  const breakHours = Math.floor(workData.totalBreakMinutes / 60);
+                  const breakMins = workData.totalBreakMinutes % 60;
+
+                  if (workData.totalBreakMinutes > 0) {
+                    detailInfo += `<br>休憩: ${breakHours > 0 ? breakHours + '時間' : ''}${breakMins}分`;
+                  }
+                }
+
+                detailInfo += `</small>`;
+                statusElement.innerHTML = `✅ 勤務中<br>${detailInfo}`;
                 statusElement.className = "status active";
               }
             }

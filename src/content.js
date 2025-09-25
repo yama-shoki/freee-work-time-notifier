@@ -241,6 +241,7 @@ class FreeeNotificationManager {
         status: "finished",
         endTime: attendanceData.endTime,
         actualWorkMinutes: actualWorkMinutes,
+        totalBreakMinutes: totalBreakMinutes,
         message: `退勤済み (${workHours}時間${workMins}分勤務)`,
       };
     }
@@ -259,6 +260,7 @@ class FreeeNotificationManager {
         completionTime: completionTime,
         actualWorkMinutes: actualWorkMinutes,
         overtimeMinutes: overtimeMinutes,
+        totalBreakMinutes: totalBreakMinutes,
         message: `8時間勤務完了済み（${Math.floor(overtimeMinutes / 60)}時間${
           overtimeMinutes % 60
         }分超過）`,
@@ -275,6 +277,7 @@ class FreeeNotificationManager {
         completionTime: completionTime,
         actualWorkMinutes: actualWorkMinutes,
         remainingMinutes: remainingMinutes,
+        totalBreakMinutes: totalBreakMinutes,
         message: `8時間完了予定: ${completionTime} (残り${Math.floor(
           remainingMinutes / 60
         )}時間${remainingMinutes % 60}分)`,

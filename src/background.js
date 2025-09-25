@@ -120,13 +120,21 @@ class NotificationManager {
         {
           enableNotification1: true,
           warningTime1: 10, // Default 10 minutes
+          customWarning1: 25,
           enableNotification2: true,
           warningTime2: 1, // Default 1 minute
+          customWarning2: 2,
           enableOvertimeNotifications: false,
           overtimeInterval: 30,
+          customOvertime: 45,
         },
         (items) => {
-          const { enableNotification1, warningTime1, enableNotification2, warningTime2, enableOvertimeNotifications, overtimeInterval } = items;
+          const { enableNotification1, warningTime1, customWarning1, enableNotification2, warningTime2, customWarning2, enableOvertimeNotifications, overtimeInterval, customOvertime } = items;
+
+          // カスタム時間の解決
+          const actualWarningTime1 = warningTime1 === "custom" ? customWarning1 : parseInt(warningTime1);
+          const actualWarningTime2 = warningTime2 === "custom" ? customWarning2 : parseInt(warningTime2);
+          const actualOvertimeInterval = overtimeInterval === "custom" ? customOvertime : parseInt(overtimeInterval);
 
           const now = new Date();
           const currentTime = now.getHours() * 60 + now.getMinutes();
@@ -134,12 +142,12 @@ class NotificationManager {
 
           // Schedule first notification (only if enabled)
           if (enableNotification1) {
-            const notificationTime1 = completion - warningTime1;
+            const notificationTime1 = completion - actualWarningTime1;
             if (notificationTime1 > currentTime) {
               const delay1 = notificationTime1 - currentTime;
-              this.scheduleAlarm(`${warningTime1}min-warning`, delay1, {
+              this.scheduleAlarm(`${actualWarningTime1}min-warning`, delay1, {
                 type: "warning", // Generic warning type
-                minutesBefore: warningTime1,
+                minutesBefore: actualWarningTime1,
                 completionTime: completionInfo.completionTime,
               });
             }
@@ -147,12 +155,12 @@ class NotificationManager {
 
           // Schedule second notification (only if enabled)
           if (enableNotification2) {
-            const notificationTime2 = completion - warningTime2;
+            const notificationTime2 = completion - actualWarningTime2;
             if (notificationTime2 > currentTime) {
               const delay2 = notificationTime2 - currentTime;
-              this.scheduleAlarm(`${warningTime2}min-warning`, delay2, {
+              this.scheduleAlarm(`${actualWarningTime2}min-warning`, delay2, {
                 type: "warning", // Generic warning type
-                minutesBefore: warningTime2,
+                minutesBefore: actualWarningTime2,
                 completionTime: completionInfo.completionTime,
               });
             }
@@ -170,10 +178,10 @@ class NotificationManager {
           // Update the status notification message to be dynamic
           let notificationSummary = "";
           if (enableNotification1) {
-            notificationSummary += `\n通知1: ${warningTime1}分前`;
+            notificationSummary += `\n通知1: ${actualWarningTime1}分前`;
           }
           if (enableNotification2) {
-            notificationSummary += `\n通知2: ${warningTime2}分前`;
+            notificationSummary += `\n通知2: ${actualWarningTime2}分前`;
           }
           if (!enableNotification1 && !enableNotification2) {
             notificationSummary = "\n事前通知: オフ";
@@ -181,7 +189,7 @@ class NotificationManager {
 
           // 超過勤務通知の設定も追加
           if (enableOvertimeNotifications) {
-            notificationSummary += `\n超過勤務: ${overtimeInterval}分ごと`;
+            notificationSummary += `\n超過勤務: ${actualOvertimeInterval}分ごと`;
           } else {
             notificationSummary += `\n超過勤務: オフ`;
           }
@@ -346,9 +354,13 @@ class NotificationManager {
             {
               enableOvertimeNotifications: false,
               overtimeInterval: 30,
+              customOvertime: 45,
             },
             (items) => {
               if (items.enableOvertimeNotifications) {
+                // カスタム時間の解決
+                const actualInterval = items.overtimeInterval === "custom" ? items.customOvertime : parseInt(items.overtimeInterval);
+
                 // 超過時間計算のために完了時刻を保存
                 chrome.storage.local.set({
                   completionTimeForOvertime: alarmData.completionTime,
@@ -356,11 +368,11 @@ class NotificationManager {
 
                 // 定期的なアラームを作成
                 chrome.alarms.create("overtime-notifier", {
-                  delayInMinutes: items.overtimeInterval,
-                  periodInMinutes: items.overtimeInterval,
+                  delayInMinutes: actualInterval,
+                  periodInMinutes: actualInterval,
                 });
                 console.log(
-                  `超過勤務通知を${items.overtimeInterval}分ごとに設定しました。`
+                  `超過勤務通知を${actualInterval}分ごとに設定しました。`
                 );
               }
             }

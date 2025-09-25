@@ -111,7 +111,13 @@
           <option value="15">15分前</option>
           <option value="10" selected>10分前</option>
           <option value="5">5分前</option>
+          <option value="custom">カスタム入力</option>
         </select>
+      </div>
+
+      <div class="setting-item" id="custom-warning-1-setting" style="display: none;">
+        <label for="custom-warning-1">カスタム時間（分）:</label>
+        <input type="number" id="custom-warning-1" min="1" max="480" placeholder="例: 25" style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px;" />
       </div>
 
       <div class="setting-interval">
@@ -126,7 +132,13 @@
           <option value="5">5分前</option>
           <option value="3">3分前</option>
           <option value="1" selected>1分前</option>
+          <option value="custom">カスタム入力</option>
         </select>
+      </div>
+
+      <div class="setting-item" id="custom-warning-2-setting" style="display: none;">
+        <label for="custom-warning-2">カスタム時間（分）:</label>
+        <input type="number" id="custom-warning-2" min="1" max="480" placeholder="例: 2" style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px;" />
       </div>
 
       <div class="setting-interval">
@@ -141,7 +153,13 @@
           <option value="15">15分ごと</option>
           <option value="30" selected>30分ごと</option>
           <option value="60">1時間ごと</option>
+          <option value="custom">カスタム入力</option>
         </select>
+      </div>
+
+      <div class="setting-item" id="custom-overtime-setting" style="display: none;">
+        <label for="custom-overtime">カスタム間隔（分）:</label>
+        <input type="number" id="custom-overtime" min="1" max="480" placeholder="例: 45" style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px;" />
       </div>
     </div>
 

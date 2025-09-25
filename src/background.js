@@ -160,10 +160,12 @@ class NotificationManager {
 
     if (completionInfo.status === "finished") {
       // 退勤済みの場合の通知
+      const workHours = Math.floor(completionInfo.actualWorkMinutes / 60);
+      const workMins = completionInfo.actualWorkMinutes % 60;
       this.showImmediateNotification({
         type: "finished",
-        title: "勤務状況確認",
-        message: completionInfo.message,
+        title: "勤務お疲れ様でした！",
+        message: `本日の勤務が終了しました。\n勤務時間: ${workHours}時間${workMins}分`,
         iconUrl: chrome.runtime.getURL("icons/icon48.png"),
       });
     } else if (completionInfo.status === "completed") {

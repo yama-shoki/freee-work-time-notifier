@@ -54,6 +54,10 @@ class NotificationManager {
         this.scheduleBreakEndNotification(message.data);
         sendResponse({ success: true });
         break;
+      case "cancelBreakNotifications":
+        this.cancelBreakNotifications(message.data);
+        sendResponse({ success: true });
+        break;
       default:
         console.log("不明なメッセージタイプ:", message.type);
     }
@@ -230,6 +234,24 @@ class NotificationManager {
 
       console.log(`休憩終了通知をスケジュールしました: ${breakStartTime}開始 → ${this.minutesToTime(notificationMinutes)}に${warningTime}分前通知`);
     }
+  }
+
+  // 休憩通知をキャンセル
+  cancelBreakNotifications(cancelData) {
+    const { workDate } = cancelData;
+
+    // 休憩関連のアラームを検索してキャンセル
+    chrome.alarms.getAll((alarms) => {
+      alarms.forEach((alarm) => {
+        // 休憩関連のアラーム名パターンをチェック
+        if (alarm.name.includes('break_') && alarm.name.startsWith(workDate)) {
+          chrome.alarms.clear(alarm.name);
+          chrome.storage.local.remove(`alarm_${alarm.name}`);
+          this.activeAlarms.delete(alarm.name);
+          console.log(`休憩通知をキャンセルしました: ${alarm.name}`);
+        }
+      });
+    });
   }
 
   // アラームをスケジュール

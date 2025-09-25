@@ -19,6 +19,7 @@ class FreeeNotificationManager {
     this.loadStoredData(); // 保存されたデータを復元
     this.checkInitialWorkStatus(); // 初期勤務状態をチェック
     this.observeDialogAppearance();
+    this.startBreakButtonMonitoring(); // 休憩開始ボタンの監視を開始
   }
 
   // 初期勤務状態をチェック（修正ボタンを押さずに）
@@ -437,39 +438,302 @@ class FreeeNotificationManager {
     return updatedData;
   }
 
-  // 休憩終了通知をスケジュール
-  scheduleBreakEndNotification(breakStartTime) {
-    // 設定を取得して休憩終了通知をセット
-    chrome.storage.sync.get({
-      enableBreakNotifications: false,
-      breakWarningTime: 5,
-      breakDuration: 60
-    }, (items) => {
-      if (!items.enableBreakNotifications) {
-        return; // 休憩通知が無効の場合は何もしない
-      }
-
-      const breakEndNotification = {
-        type: "scheduleBreakEndNotification",
-        data: {
-          breakStartTime: breakStartTime,
-          breakDuration: items.breakDuration,
-          warningTime: items.breakWarningTime,
-          workDate: this.getTodayDateString()
+  // 休憩開始ボタンのリアルタイム検知を開始
+  startBreakButtonMonitoring() {
+    // MutationObserverで休憩開始・終了ボタンの出現・クリックを監視
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          // 新しく追加されたノードから休憩関連ボタンを探す
+          this.attachBreakButtonListener();
+          this.attachBreakEndButtonListener();
+          this.checkBreakStatus(); // 休憩状態をチェック
         }
-      };
+      });
+    });
 
-      // バックグラウンドスクリプトに休憩終了通知をスケジュール
-      try {
-        chrome.runtime.sendMessage(breakEndNotification, (response) => {
-          if (chrome.runtime.lastError) {
-            console.error("休憩通知スケジュールエラー:", chrome.runtime.lastError);
-          }
-        });
-      } catch (error) {
-        console.error("休憩通知メッセージ送信エラー:", error);
+    // DOM全体を監視
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // 初回実行
+    this.attachBreakButtonListener();
+    this.attachBreakEndButtonListener();
+    this.checkBreakStatus();
+  }
+
+  // 休憩中状態をチェック
+  checkBreakStatus() {
+    try {
+      // 「休憩中」の表示を探す
+      const breakStatusElements = Array.from(document.querySelectorAll('*')).filter(el =>
+        el.textContent && el.textContent.includes('休憩中') &&
+        !el.querySelector('*') // テキストのみの要素
+      );
+
+      // 休憩終了ボタンの存在をチェック
+      const breakEndButton = Array.from(document.querySelectorAll('button')).find(btn =>
+        btn.textContent && btn.textContent.includes('休憩終了')
+      );
+
+      if (breakStatusElements.length > 0 || breakEndButton) {
+        // 休憩中状態を検出
+        const breakStatusInfo = {
+          status: "on_break",
+          message: "現在休憩中です",
+          workDate: this.getTodayDateString(),
+        };
+
+        this.lastNotificationData = breakStatusInfo;
+        this.sendNotificationData(breakStatusInfo);
+      }
+    } catch (error) {
+      console.error("休憩状態チェックエラー:", error);
+    }
+  }
+
+  // 休憩開始ボタンにイベントリスナーを追加
+  attachBreakButtonListener() {
+    // 既存のリスナーを避けるため、カスタムデータ属性でチェック
+    const breakButtons = Array.from(document.querySelectorAll('button')).filter(btn =>
+      btn.textContent && btn.textContent.includes('休憩開始') && !btn.dataset.breakListenerAttached
+    );
+
+    breakButtons.forEach(button => {
+      button.dataset.breakListenerAttached = 'true';
+      button.addEventListener('click', () => {
+        // 少し遅延させて、freee側の処理完了を待つ
+        setTimeout(() => {
+          this.showBreakTimeDialog();
+        }, 500);
+      });
+      console.log('休憩開始ボタンにリスナーを追加しました');
+    });
+  }
+
+  // 休憩終了ボタンにイベントリスナーを追加
+  attachBreakEndButtonListener() {
+    // 既存のリスナーを避けるため、カスタムデータ属性でチェック
+    const breakEndButtons = Array.from(document.querySelectorAll('button')).filter(btn =>
+      btn.textContent && btn.textContent.includes('休憩終了') && !btn.dataset.breakEndListenerAttached
+    );
+
+    breakEndButtons.forEach(button => {
+      button.dataset.breakEndListenerAttached = 'true';
+      button.addEventListener('click', () => {
+        // 休憩終了時の処理
+        setTimeout(() => {
+          this.handleBreakEnd();
+        }, 500);
+      });
+      console.log('休憩終了ボタンにリスナーを追加しました');
+    });
+  }
+
+  // 休憩終了時の処理
+  handleBreakEnd() {
+    // 進行中の休憩通知をキャンセル
+    chrome.runtime.sendMessage({
+      type: "cancelBreakNotifications",
+      data: { workDate: this.getTodayDateString() }
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error("休憩通知キャンセルエラー:", chrome.runtime.lastError);
+      } else {
+        console.log("休憩通知をキャンセルしました");
       }
     });
+
+    // 勤務中状態に戻る（修正ダイアログを待つ）
+    console.log("休憩終了 - 勤務中状態に戻ります");
+  }
+
+  // 休憩時間選択ダイアログを表示
+  showBreakTimeDialog() {
+    // 既存のダイアログがある場合は削除
+    const existingDialog = document.getElementById('freee-break-dialog');
+    if (existingDialog) {
+      existingDialog.remove();
+    }
+
+    // ダイアログHTML
+    const dialogHTML = `
+      <div id="freee-break-dialog" style="
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border: 2px solid #4CAF50;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        z-index: 10000;
+        font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+        min-width: 300px;
+      ">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h3 style="margin: 0; color: #333;">☕ 休憩時間の設定</h3>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: bold;">休憩時間:</label>
+          <select id="break-duration-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="10">10分</option>
+            <option value="15">15分</option>
+            <option value="30" selected>30分</option>
+            <option value="45">45分</option>
+            <option value="60">1時間</option>
+            <option value="90">1時間30分</option>
+            <option value="custom">カスタム入力</option>
+          </select>
+        </div>
+
+        <div id="custom-duration-input" style="margin-bottom: 15px; display: none;">
+          <label style="display: block; margin-bottom: 8px; font-weight: bold;">カスタム時間（分）:</label>
+          <input type="number" id="custom-duration" min="1" max="480" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: bold;">通知タイミング:</label>
+          <select id="break-warning-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="10">10分前</option>
+            <option value="5" selected>5分前</option>
+            <option value="3">3分前</option>
+            <option value="1">1分前</option>
+          </select>
+        </div>
+
+        <div style="text-align: center;">
+          <button id="break-dialog-ok" style="
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-right: 10px;
+            cursor: pointer;
+            font-size: 14px;
+          ">設定</button>
+          <button id="break-dialog-cancel" style="
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+          ">キャンセル</button>
+        </div>
+      </div>
+
+      <!-- 背景オーバーレイ -->
+      <div id="freee-break-overlay" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+      "></div>
+    `;
+
+    // ダイアログを挿入
+    document.body.insertAdjacentHTML('beforeend', dialogHTML);
+
+    // イベントリスナーを追加
+    this.setupBreakDialogEvents();
+  }
+
+  // ダイアログのイベントリスナーを設定
+  setupBreakDialogEvents() {
+    const durationSelect = document.getElementById('break-duration-select');
+    const customInput = document.getElementById('custom-duration-input');
+    const customDuration = document.getElementById('custom-duration');
+    const okButton = document.getElementById('break-dialog-ok');
+    const cancelButton = document.getElementById('break-dialog-cancel');
+    const overlay = document.getElementById('freee-break-overlay');
+
+    // カスタム入力の表示/非表示
+    durationSelect.addEventListener('change', () => {
+      if (durationSelect.value === 'custom') {
+        customInput.style.display = 'block';
+        customDuration.focus();
+      } else {
+        customInput.style.display = 'none';
+      }
+    });
+
+    // OKボタン
+    okButton.addEventListener('click', () => {
+      let duration = parseInt(durationSelect.value);
+      if (durationSelect.value === 'custom') {
+        duration = parseInt(customDuration.value);
+        if (!duration || duration < 1 || duration > 480) {
+          alert('カスタム時間は1分〜480分の範囲で入力してください');
+          return;
+        }
+      }
+
+      const warningTime = parseInt(document.getElementById('break-warning-select').value);
+
+      // 休憩通知をスケジュール
+      this.scheduleBreakNotification(duration, warningTime);
+
+      // ダイアログを閉じる
+      this.closeBreakDialog();
+    });
+
+    // キャンセル・オーバーレイクリック
+    cancelButton.addEventListener('click', () => this.closeBreakDialog());
+    overlay.addEventListener('click', () => this.closeBreakDialog());
+
+    // Escキーでキャンセル
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.closeBreakDialog();
+      }
+    }, { once: true });
+  }
+
+  // ダイアログを閉じる
+  closeBreakDialog() {
+    const dialog = document.getElementById('freee-break-dialog');
+    const overlay = document.getElementById('freee-break-overlay');
+    if (dialog) dialog.remove();
+    if (overlay) overlay.remove();
+  }
+
+  // 休憩通知をスケジュール
+  scheduleBreakNotification(duration, warningTime) {
+    const now = new Date();
+    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+    const breakData = {
+      type: "scheduleBreakEndNotification",
+      data: {
+        breakStartTime: currentTime,
+        breakDuration: duration,
+        warningTime: warningTime,
+        workDate: this.getTodayDateString()
+      }
+    };
+
+    // バックグラウンドスクリプトに送信
+    try {
+      chrome.runtime.sendMessage(breakData, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("休憩通知スケジュールエラー:", chrome.runtime.lastError);
+        } else {
+          console.log(`休憩通知をスケジュールしました: ${duration}分休憩、${warningTime}分前通知`);
+        }
+      });
+    } catch (error) {
+      console.error("休憩通知メッセージ送信エラー:", error);
+    }
   }
 
   // 今日の日付文字列を取得 (YYYY-MM-DD形式)

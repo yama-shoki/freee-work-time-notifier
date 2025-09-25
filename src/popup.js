@@ -133,6 +133,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 // 出勤前の表示
                 statusElement.innerHTML = `⏰ ${workData.message}`;
                 statusElement.className = "status inactive";
+              } else if (workData && workData.status === "on_break") {
+                // 休憩中の表示
+                statusElement.innerHTML = `☕ ${workData.message}`;
+                statusElement.className = "status active";
               } else {
                 // 勤務中の表示
                 statusElement.innerHTML = `✅ 勤務中<br><small>${response.workTime}</small>`;

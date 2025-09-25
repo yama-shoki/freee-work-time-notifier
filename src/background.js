@@ -50,6 +50,10 @@ class NotificationManager {
         this.scheduleWorkEndNotifications(message.data);
         sendResponse({ success: true });
         break;
+      case "scheduleBreakEndNotification":
+        this.scheduleBreakEndNotification(message.data);
+        sendResponse({ success: true });
+        break;
       default:
         console.log("不明なメッセージタイプ:", message.type);
     }
@@ -190,6 +194,44 @@ class NotificationManager {
     }
   }
 
+  // 休憩終了通知をスケジュール
+  scheduleBreakEndNotification(breakData) {
+    const { breakStartTime, breakDuration, warningTime, workDate } = breakData;
+
+    // 休憩開始時刻を分に変換
+    const breakStartMinutes = this.timeToMinutes(breakStartTime);
+
+    // 現在時刻を取得
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    // 休憩終了予定時刻を計算
+    const breakEndMinutes = breakStartMinutes + breakDuration;
+
+    // 通知時刻を計算（休憩終了の○分前）
+    const notificationMinutes = breakEndMinutes - warningTime;
+
+    // 現在時刻より後の場合のみスケジュール
+    if (notificationMinutes > currentMinutes) {
+      const delayMinutes = notificationMinutes - currentMinutes;
+      const alarmName = `${workDate}_break_${breakStartTime.replace(':', '')}_warning`;
+
+      // 既存の休憩アラームをクリア（同じ休憩時間の重複を防ぐ）
+      chrome.alarms.clear(alarmName);
+
+      // 新しいアラームをスケジュール
+      this.scheduleAlarm(`break_${breakStartTime.replace(':', '')}_warning`, delayMinutes, {
+        type: "break_warning",
+        breakStartTime: breakStartTime,
+        breakDuration: breakDuration,
+        warningTime: warningTime,
+        breakEndTime: this.minutesToTime(breakEndMinutes)
+      });
+
+      console.log(`休憩終了通知をスケジュールしました: ${breakStartTime}開始 → ${this.minutesToTime(notificationMinutes)}に${warningTime}分前通知`);
+    }
+  }
+
   // アラームをスケジュール
   scheduleAlarm(name, delayMinutes, data) {
     // 日付付きのアラーム名を作成
@@ -253,6 +295,16 @@ class NotificationManager {
             type: "warning",
             title: `退勤${alarmData.minutesBefore}分前`,
             message: `8時間勤務完了まで${alarmData.minutesBefore}分です\n完了予定時刻: ${alarmData.completionTime}`,
+            iconUrl: chrome.runtime.getURL("icons/icon48.png"),
+            requireInteraction: true,
+          });
+          break;
+
+        case "break_warning":
+          this.showNotification({
+            type: "break",
+            title: `休憩終了${alarmData.warningTime}分前`,
+            message: `休憩時間がもうすぐ終了します\n予定終了時刻: ${alarmData.breakEndTime}\n休憩開始: ${alarmData.breakStartTime}`,
             iconUrl: chrome.runtime.getURL("icons/icon48.png"),
             requireInteraction: true,
           });

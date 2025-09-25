@@ -159,6 +159,8 @@ class FreeeNotificationManager {
           break;
         case "休憩開始":
           currentBreak = { startTime: time };
+          // 休憩開始時に休憩終了通知をスケジュール
+          this.scheduleBreakEndNotification(time);
           break;
         case "休憩終了":
           if (currentBreak.startTime) {
@@ -435,6 +437,41 @@ class FreeeNotificationManager {
     }
 
     return updatedData;
+  }
+
+  // 休憩終了通知をスケジュール
+  scheduleBreakEndNotification(breakStartTime) {
+    // 設定を取得して休憩終了通知をセット
+    chrome.storage.sync.get({
+      enableBreakNotifications: false,
+      breakWarningTime: 5,
+      breakDuration: 60
+    }, (items) => {
+      if (!items.enableBreakNotifications) {
+        return; // 休憩通知が無効の場合は何もしない
+      }
+
+      const breakEndNotification = {
+        type: "scheduleBreakEndNotification",
+        data: {
+          breakStartTime: breakStartTime,
+          breakDuration: items.breakDuration,
+          warningTime: items.breakWarningTime,
+          workDate: this.getTodayDateString()
+        }
+      };
+
+      // バックグラウンドスクリプトに休憩終了通知をスケジュール
+      try {
+        chrome.runtime.sendMessage(breakEndNotification, (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("休憩通知スケジュールエラー:", chrome.runtime.lastError);
+          }
+        });
+      } catch (error) {
+        console.error("休憩通知メッセージ送信エラー:", error);
+      }
+    });
   }
 
   // 今日の日付文字列を取得 (YYYY-MM-DD形式)

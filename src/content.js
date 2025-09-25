@@ -127,10 +127,14 @@ class FreeeNotificationManager {
 
   // 修正ダイアログから勤怠データを抽出
   extractAttendanceData() {
-    const texts = document.querySelectorAll(
-      ".vb-tableListRow .vb-tableListCell__text"
-    );
-    if (texts.length === 0) return null;
+    try {
+      const texts = document.querySelectorAll(
+        ".vb-tableListRow .vb-tableListCell__text"
+      );
+      if (texts.length === 0) {
+        console.warn("勤怠データのテーブル要素が見つかりません");
+        return null;
+      }
 
     const attendanceData = {
       startTime: null,
@@ -175,6 +179,10 @@ class FreeeNotificationManager {
     }
 
     return attendanceData;
+    } catch (error) {
+      console.error("勤怠データ抽出エラー:", error);
+      return null;
+    }
   }
 
   // 8時間勤務完了予定時刻を計算

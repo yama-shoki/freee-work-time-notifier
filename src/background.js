@@ -301,6 +301,10 @@ class NotificationManager {
   }
   // 即座に通知を表示
   showImmediateNotification(options) {
+    if (!options || typeof options !== 'object') {
+      console.error("無効な通知オプション:", options);
+      return;
+    }
     this.showNotification(options);
   }
 
@@ -317,8 +321,8 @@ class NotificationManager {
       const notificationOptions = {
         type: "basic",
         iconUrl: options.iconUrl || chrome.runtime.getURL("icons/icon48.png"),
-        title: options.title,
-        message: options.message,
+        title: options.title || "",
+        message: options.message || "",
         requireInteraction: options.requireInteraction || false,
       };
 

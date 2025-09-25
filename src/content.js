@@ -159,8 +159,6 @@ class FreeeNotificationManager {
           break;
         case "休憩開始":
           currentBreak = { startTime: time };
-          // 休憩開始時に休憩終了通知をスケジュール
-          this.scheduleBreakEndNotification(time);
           break;
         case "休憩終了":
           if (currentBreak.startTime) {

@@ -9,11 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const enableNotification2 = document.getElementById("enable-notification-2");
   const notification2Setting = document.getElementById("notification-2-setting");
   const warningTime2 = document.getElementById("warning-time-2");
-  const enableBreakNotifications = document.getElementById("enable-break-notifications");
-  const breakNotificationSetting = document.getElementById("break-notification-setting");
-  const breakWarningTime = document.getElementById("break-warning-time");
-  const breakDurationSetting = document.getElementById("break-duration-setting");
-  const breakDuration = document.getElementById("break-duration");
   const enableOvertimeNotifications = document.getElementById(
     "enable-overtime-notifications"
   );
@@ -40,16 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   warningTime2.addEventListener("change", saveSettings);
 
-  enableBreakNotifications.addEventListener("change", () => {
-    const isEnabled = enableBreakNotifications.checked;
-    breakWarningTime.disabled = !isEnabled;
-    breakDuration.disabled = !isEnabled;
-    breakNotificationSetting.classList.toggle("hidden", !isEnabled);
-    breakDurationSetting.classList.toggle("hidden", !isEnabled);
-    saveSettings();
-  });
-  breakWarningTime.addEventListener("change", saveSettings);
-  breakDuration.addEventListener("change", saveSettings);
 
   enableOvertimeNotifications.addEventListener("change", () => {
     const isEnabled = enableOvertimeNotifications.checked;
@@ -76,9 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
         warningTime1: 10,
         enableNotification2: true,
         warningTime2: 1,
-        enableBreakNotifications: false,
-        breakWarningTime: 5,
-        breakDuration: 60,
         enableOvertimeNotifications: false,
         overtimeInterval: 30,
       },
@@ -92,14 +74,6 @@ document.addEventListener("DOMContentLoaded", () => {
         warningTime2.value = items.warningTime2;
         warningTime2.disabled = !items.enableNotification2;
         notification2Setting.classList.toggle("hidden", !items.enableNotification2);
-
-        enableBreakNotifications.checked = items.enableBreakNotifications;
-        breakWarningTime.value = items.breakWarningTime;
-        breakDuration.value = items.breakDuration;
-        breakWarningTime.disabled = !items.enableBreakNotifications;
-        breakDuration.disabled = !items.enableBreakNotifications;
-        breakNotificationSetting.classList.toggle("hidden", !items.enableBreakNotifications);
-        breakDurationSetting.classList.toggle("hidden", !items.enableBreakNotifications);
 
         enableOvertimeNotifications.checked = items.enableOvertimeNotifications;
         overtimeInterval.value = items.overtimeInterval;
@@ -116,9 +90,6 @@ document.addEventListener("DOMContentLoaded", () => {
       warningTime1: parseInt(warningTime1.value),
       enableNotification2: enableNotification2.checked,
       warningTime2: parseInt(warningTime2.value),
-      enableBreakNotifications: enableBreakNotifications.checked,
-      breakWarningTime: parseInt(breakWarningTime.value),
-      breakDuration: parseInt(breakDuration.value),
       enableOvertimeNotifications: enableOvertimeNotifications.checked,
       overtimeInterval: parseInt(overtimeInterval.value),
     };

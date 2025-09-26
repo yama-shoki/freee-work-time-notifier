@@ -69,7 +69,7 @@
 4. 解凍したフォルダを選択
 
 <p align="center">
-  <img width="1920" height="1080" alt="スクリーンショット 2025-09-24 23 47 21" src="https://github.com/user-attachments/assets/5b60fbc1-8eab-4d1d-ad7d-7039923e8ee2" />
+  <img width="1920" height="1080" alt="493407753-5b60fbc1-8eab-4d1d-ad7d-7039923e8ee2" src="https://github.com/user-attachments/assets/e81a37be-82f0-49e4-a887-87a1a1511e76" />
 </p>
 
 **Dia の場合：**
@@ -80,8 +80,7 @@
 4. 解凍したフォルダを選択
 
 <p align="center">
-  <img width="1920" height="1080" alt="スクリーンショット 2025-09-25 0 40 17" src="https://github.com/user-attachments/assets/ae63be10-ad0e-4138-a2fa-25d979f5d571" />
-
+ <img width="1920" height="1080" alt="493436858-ae63be10-ad0e-4138-a2fa-25d979f5d571" src="https://github.com/user-attachments/assets/3a8d3d08-d5f4-4748-886c-6d053e3390f5" />
 </p>
 
 ### 5. 動作テスト
@@ -90,13 +89,13 @@
 2. 右上の拡張機能アイコンを押して拡張機能を開き、freee のアイコンをクリックしてステータスを確認する。ピン留めしておくと便利です。
 
 <p align="center">
-  <img width="1920" height="1080" alt="スクリーンショット 2025-09-24 23 48 42" src="https://github.com/user-attachments/assets/c21a9c03-beb7-4a34-9035-7c189249ab84" />
+ <img width="1920" height="1080" alt="493409804-c21a9c03-beb7-4a34-9035-7c189249ab84" src="https://github.com/user-attachments/assets/33e92996-7bf2-4cfd-b007-15dc29783afa" />
 </p>
 
 3. freee の **「修正」** ボタンをクリック
 
 <p align="center">
-  <img width="1920" height="1080" alt="スクリーンショット 2025-09-24 23 52 18" src="https://github.com/user-attachments/assets/74520281-61d3-4834-9bba-8154b665dc89" />
+  <img width="1920" height="1080" alt="493411205-74520281-61d3-4834-9bba-8154b665dc89" src="https://github.com/user-attachments/assets/fb548d75-6459-448b-b09a-437cbe8e557c" />
 </p>
 
 4. デスクトップ通知が届けば成功です

@@ -5,6 +5,7 @@ class NotificationManager {
   constructor() {
     this.activeAlarms = new Set();
     this.currentWorkDate = null; // 現在の勤務日を記録
+    this.offscreenCreated = false; // オフスクリーンドキュメントの状態
     this.init();
   }
 
@@ -20,6 +21,11 @@ class NotificationManager {
     // アラームイベントを監視
     chrome.alarms.onAlarm.addListener((alarm) => {
       this.handleAlarm(alarm);
+    });
+
+    // 通知クリックイベントを監視
+    chrome.notifications.onClicked.addListener((notificationId) => {
+      this.handleNotificationClick(notificationId);
     });
 
     // ストレージ変更を監視
@@ -542,12 +548,18 @@ class NotificationManager {
         return;
       }
 
+      // 重要な通知タイプはrequireInteractionをデフォルトでtrueにする
+      const importantTypes = ["warning", "success", "completion", "break_warning", "break_end", "break"];
+      const shouldRequireInteraction = options.requireInteraction !== undefined
+        ? options.requireInteraction
+        : importantTypes.includes(options.type);
+
       const notificationOptions = {
         type: "basic",
         iconUrl: options.iconUrl || chrome.runtime.getURL("icons/icon48.png"),
         title: options.title || "",
         message: options.message || "",
-        requireInteraction: options.requireInteraction || false,
+        requireInteraction: shouldRequireInteraction,
       };
 
       const notificationId = await new Promise((resolve, reject) => {
@@ -564,16 +576,100 @@ class NotificationManager {
         );
       });
 
-      // 通知の自動消去（通知タイプに応じて時間を調整）
-      const autoDismissDelay = this.getAutoDismissDelay(options.type);
-      setTimeout(() => {
-        chrome.notifications.clear(notificationId, (wasCleared) => {
-          if (wasCleared) {
-          }
-        });
-      }, autoDismissDelay);
+      // 音声通知を再生
+      await this.playNotificationSound(options.type);
+
+      // 通知の自動消去（通知タイプに応じて時間を調整）- requireInteractionがtrueの場合は自動消去しない
+      if (!options.requireInteraction) {
+        const autoDismissDelay = this.getAutoDismissDelay(options.type);
+        setTimeout(() => {
+          chrome.notifications.clear(notificationId, (wasCleared) => {
+            if (wasCleared) {
+            }
+          });
+        }, autoDismissDelay);
+      }
     } catch (error) {
       console.error("通知表示エラー:", error);
+    }
+  }
+
+  // 通知クリック時のハンドラー
+  handleNotificationClick(notificationId) {
+    // freeeページを開く or フォーカスする
+    chrome.tabs.query({ url: "https://p.secure.freee.co.jp/*" }, (tabs) => {
+      if (tabs.length > 0) {
+        // 既存のfreeeタブをアクティブにする
+        chrome.tabs.update(tabs[0].id, { active: true });
+        chrome.windows.update(tabs[0].windowId, { focused: true });
+      } else {
+        // freeeページを新しいタブで開く
+        chrome.tabs.create({ url: "https://p.secure.freee.co.jp/" });
+      }
+    });
+
+    // 通知をクリアする
+    chrome.notifications.clear(notificationId);
+  }
+
+  // オフスクリーンドキュメントを作成
+  async ensureOffscreenDocument() {
+    // 既に存在するか確認
+    const existingContexts = await chrome.runtime.getContexts({
+      contextTypes: ["OFFSCREEN_DOCUMENT"],
+      documentUrls: [chrome.runtime.getURL("src/offscreen.html")],
+    });
+
+    if (existingContexts.length > 0) {
+      return;
+    }
+
+    // オフスクリーンドキュメントを作成
+    await chrome.offscreen.createDocument({
+      url: "src/offscreen.html",
+      reasons: ["AUDIO_PLAYBACK"],
+      justification: "通知音を再生するため",
+    });
+  }
+
+  // 通知音を再生
+  async playNotificationSound(notificationType) {
+    try {
+      // 音を鳴らさない通知タイプ（設定完了、退勤済み確認、休憩開始など）
+      const silentTypes = ["status", "finished", "completed", "break_start"];
+      if (silentTypes.includes(notificationType)) {
+        return;
+      }
+
+      // 音声通知が有効か確認
+      const settings = await new Promise((resolve) => {
+        chrome.storage.sync.get({ enableSound: true }, resolve);
+      });
+
+      if (!settings.enableSound) {
+        return;
+      }
+
+      // オフスクリーンドキュメントを確保
+      await this.ensureOffscreenDocument();
+
+      // サウンドタイプを決定
+      let soundType = "default";
+      if (notificationType === "warning" || notificationType === "break_warning") {
+        soundType = "warning";
+      } else if (notificationType === "success" || notificationType === "completion") {
+        soundType = "success";
+      } else if (notificationType === "break" || notificationType === "break_end" || notificationType === "break_end_exact") {
+        soundType = "break";
+      }
+
+      // オフスクリーンドキュメントに音声再生を依頼
+      chrome.runtime.sendMessage({
+        type: "playNotificationSound",
+        soundType: soundType,
+      });
+    } catch (error) {
+      console.error("音声再生エラー:", error);
     }
   }
 

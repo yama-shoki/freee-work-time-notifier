@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "custom-overtime-setting"
   );
   const customOvertime = document.getElementById("custom-overtime");
+  const enableSound = document.getElementById("enable-sound");
 
   // 設定を読み込み
   loadSettings();
@@ -118,6 +119,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   customOvertime.addEventListener("input", saveSettings);
 
+  enableSound.addEventListener("change", saveSettings);
+
   // freeeページの状態をチェック
   checkFreeePageStatus();
 
@@ -135,6 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
         enableOvertimeNotifications: false,
         overtimeInterval: 30,
         customOvertime: 45,
+        enableSound: true,
       },
       (items) => {
         workHoursInput.value = items.workHours;
@@ -180,6 +184,8 @@ document.addEventListener("DOMContentLoaded", () => {
           items.overtimeInterval === "custom"
             ? "block"
             : "none";
+
+        enableSound.checked = items.enableSound;
       }
     );
   }
@@ -206,6 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ? "custom"
           : parseInt(overtimeInterval.value),
       customOvertime: parseInt(customOvertime.value) || 45,
+      enableSound: enableSound.checked,
     };
 
     chrome.storage.sync.set(settings, () => {

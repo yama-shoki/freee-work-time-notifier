@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "freee退勤通知",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "freee勤怠管理で8時間勤務完了の10分前・1分前に通知",
-  "permissions": ["notifications", "storage", "alarms", "activeTab"],
+  "permissions": ["notifications", "storage", "alarms", "activeTab", "offscreen", "tabs"],
   "background": {
     "service_worker": "src/background.js"
   },
@@ -22,5 +22,11 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["sounds/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

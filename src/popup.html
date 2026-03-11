@@ -5,16 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>freee退勤通知設定</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
       body {
-        width: 300px;
-        padding: 20px;
+        width: 420px;
+        padding: 18px;
         font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
         font-size: 14px;
         margin: 0;
       }
       .header {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
       }
       .header h1 {
         font-size: 16px;
@@ -42,8 +45,31 @@
         border-top: 1px solid #eee;
         padding-top: 15px;
       }
+      .section-card {
+        margin-bottom: 16px;
+        padding: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fafafa;
+      }
+      .section-card.priority {
+        border-color: #86efac;
+        background: #f0fdf4;
+      }
+      .section-title {
+        margin: 0 0 6px 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: #1f2937;
+      }
+      .section-description {
+        margin: 0 0 12px 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #6b7280;
+      }
       .setting-item {
-        margin-bottom: 25px;
+        margin-bottom: 16px;
       }
       .setting-item.hidden {
         display: none;
@@ -57,15 +83,55 @@
       .setting-item input[type="checkbox"] {
         margin-right: 8px;
       }
+      .setting-item input[type="number"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+      }
       .setting-item select {
         width: 100%;
-        padding: 5px;
+        padding: 8px 30px 8px 8px;
         border: 1px solid #ddd;
-        border-radius: 3px;
+        border-radius: 6px;
         font-size: 14px;
+        appearance: none;
+        -webkit-appearance: none;
+        background-color: #fff;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M1 1.25 6 6l5-4.75'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 12px 8px;
       }
       .setting-interval {
         margin-bottom: 8px;
+      }
+      .inline-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .compact-checks {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 12px;
+      }
+      .compact-checks label {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        color: #374151;
+        font-weight: 500;
+      }
+      .subtle-setting {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(134, 239, 172, 0.6);
+      }
+      .subtle-setting p {
+        margin: 5px 0 0 24px;
+        font-size: 11px;
+        color: #6b7280;
       }
       .info {
         background-color: #f8f9fa;
@@ -97,148 +163,155 @@
     </div>
 
     <div class="settings">
-      <div class="setting-item">
-        <label for="work-hours" style="font-weight: bold"
-          >予定勤務時間（時間）</label
-        >
-        <input
-          type="number"
-          id="work-hours"
-          value="8"
-          min="1"
-          max="24"
-          step="0.5"
-          style="
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-          "
-        />
-      </div>
-
-      <div class="setting-interval">
-        <label>
-          <input type="checkbox" id="enable-notification-1" checked />
-          1回目の通知を有効にする
-        </label>
-      </div>
-
-      <div class="setting-item" id="notification-1-setting">
-        <select id="warning-time-1">
-          <option value="60">1時間前</option>
-          <option value="30">30分前</option>
-          <option value="15">15分前</option>
-          <option value="10" selected>10分前</option>
-          <option value="5">5分前</option>
-          <option value="custom">カスタム入力</option>
-        </select>
-      </div>
-
-      <div
-        class="setting-item"
-        id="custom-warning-1-setting"
-        style="display: none"
-      >
-        <label for="custom-warning-1">カスタム時間（分）:</label>
-        <input
-          type="number"
-          id="custom-warning-1"
-          min="1"
-          max="480"
-          placeholder="例: 25"
-          style="
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-          "
-        />
-      </div>
-
-      <div class="setting-interval">
-        <label>
-          <input type="checkbox" id="enable-notification-2" checked />
-          2回目の通知を有効にする
-        </label>
-      </div>
-
-      <div class="setting-item" id="notification-2-setting">
-        <select id="warning-time-2">
-          <option value="5">5分前</option>
-          <option value="3">3分前</option>
-          <option value="1" selected>1分前</option>
-          <option value="custom">カスタム入力</option>
-        </select>
-      </div>
-
-      <div
-        class="setting-item"
-        id="custom-warning-2-setting"
-        style="display: none"
-      >
-        <label for="custom-warning-2">カスタム時間（分）:</label>
-        <input
-          type="number"
-          id="custom-warning-2"
-          min="1"
-          max="480"
-          placeholder="例: 2"
-          style="
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-          "
-        />
-      </div>
-
-      <div class="setting-interval">
-        <label>
-          <input type="checkbox" id="enable-overtime-notifications" />
-          超過勤務の通知を有効にする
-        </label>
-      </div>
-
-      <div class="setting-item" id="overtime-interval-setting">
-        <select id="overtime-interval">
-          <option value="15">15分ごと</option>
-          <option value="30" selected>30分ごと</option>
-          <option value="60">1時間ごと</option>
-          <option value="custom">カスタム入力</option>
-        </select>
-      </div>
-
-      <div
-        class="setting-item"
-        id="custom-overtime-setting"
-        style="display: none"
-      >
-        <label for="custom-overtime">カスタム間隔（分）:</label>
-        <input
-          type="number"
-          id="custom-overtime"
-          min="1"
-          max="480"
-          placeholder="例: 45"
-          style="
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-          "
-        />
-      </div>
-
-      <div class="setting-interval" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-        <label>
-          <input type="checkbox" id="enable-sound" checked />
-          通知音を鳴らす
-        </label>
-        <p style="font-size: 11px; color: #888; margin: 5px 0 0 24px;">
-          通知が来たときにアラーム音を再生します
+      <div class="section-card priority">
+        <p class="section-title">見逃し防止</p>
+        <p class="section-description">
+          通知をきっかけに freee のページを自動で開くか、ケースごとに選べます。
         </p>
+        <div class="compact-checks">
+          <label>
+            <input type="checkbox" id="auto-open-completion" />
+            勤務完了
+          </label>
+          <label>
+            <input type="checkbox" id="auto-open-break-end" />
+            休憩終了
+          </label>
+          <label>
+            <input type="checkbox" id="auto-open-overtime" />
+            超過勤務
+          </label>
+        </div>
+        <div class="subtle-setting">
+          <label>
+            <input type="checkbox" id="enable-sound" checked />
+            通知音を鳴らす
+          </label>
+          <p>通知が来たときにアラーム音を再生します</p>
+        </div>
       </div>
+
+      <div class="section-card">
+        <p class="section-title">勤務設定</p>
+        <div class="setting-item" style="margin-bottom: 0;">
+          <label for="work-hours" style="font-weight: bold"
+            >予定勤務時間（時間）</label
+          >
+          <input
+            type="number"
+            id="work-hours"
+            value="8"
+            min="1"
+            max="24"
+            step="0.5"
+          />
+        </div>
+      </div>
+
+      <div class="section-card">
+        <p class="section-title">通知タイミング</p>
+        <div class="inline-grid">
+          <div>
+            <div class="setting-interval">
+              <label>
+                <input type="checkbox" id="enable-notification-1" checked />
+                1回目の通知
+              </label>
+            </div>
+            <div class="setting-item" id="notification-1-setting">
+              <select id="warning-time-1">
+                <option value="60">1時間前</option>
+                <option value="30">30分前</option>
+                <option value="15">15分前</option>
+                <option value="10" selected>10分前</option>
+                <option value="5">5分前</option>
+                <option value="custom">カスタム入力</option>
+              </select>
+            </div>
+            <div
+              class="setting-item"
+              id="custom-warning-1-setting"
+              style="display: none"
+            >
+              <label for="custom-warning-1">カスタム時間（分）:</label>
+              <input
+                type="number"
+                id="custom-warning-1"
+                min="1"
+                max="480"
+                placeholder="例: 25"
+              />
+            </div>
+          </div>
+
+          <div>
+            <div class="setting-interval">
+              <label>
+                <input type="checkbox" id="enable-notification-2" checked />
+                2回目の通知
+              </label>
+            </div>
+            <div class="setting-item" id="notification-2-setting">
+              <select id="warning-time-2">
+                <option value="5">5分前</option>
+                <option value="3">3分前</option>
+                <option value="1" selected>1分前</option>
+                <option value="custom">カスタム入力</option>
+              </select>
+            </div>
+            <div
+              class="setting-item"
+              id="custom-warning-2-setting"
+              style="display: none"
+            >
+              <label for="custom-warning-2">カスタム時間（分）:</label>
+              <input
+                type="number"
+                id="custom-warning-2"
+                min="1"
+                max="480"
+                placeholder="例: 2"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <p class="section-title">超過勤務</p>
+        <div class="setting-interval">
+          <label>
+            <input type="checkbox" id="enable-overtime-notifications" />
+            超過勤務の通知を有効にする
+          </label>
+        </div>
+        <div class="inline-grid">
+          <div class="setting-item" id="overtime-interval-setting">
+            <label for="overtime-interval">通知間隔</label>
+            <select id="overtime-interval">
+              <option value="15">15分ごと</option>
+              <option value="30" selected>30分ごと</option>
+              <option value="60">1時間ごと</option>
+              <option value="custom">カスタム入力</option>
+            </select>
+          </div>
+          <div
+            class="setting-item"
+            id="custom-overtime-setting"
+            style="display: none"
+          >
+            <label for="custom-overtime">カスタム間隔（分）</label>
+            <input
+              type="number"
+              id="custom-overtime"
+              min="1"
+              max="480"
+              placeholder="例: 45"
+            />
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <div class="info">

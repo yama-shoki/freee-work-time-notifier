@@ -411,6 +411,127 @@ runTest("カスタム勤務時間での完了通知テスト", async () => {
 });
 // ======================ここまでをコピペ=======================
 
+// テストケース10: 重要通知でfreeeを自動で開く設定の確認
+// ===========================ここから====================
+runTest("重要通知でfreeeを自動で開く設定の確認", async () => {
+  await new Promise((resolve) =>
+    chrome.storage.sync.set({ autoOpenFreee: true }, resolve)
+  );
+
+  const shouldOpenSuccess = await notificationManager.shouldAutoOpenFreee(
+    "success"
+  );
+  const shouldOpenBreakEnd = await notificationManager.shouldAutoOpenFreee(
+    "break_end"
+  );
+  const shouldOpenWarning = await notificationManager.shouldAutoOpenFreee(
+    "warning"
+  );
+
+  console.log("autoOpenFreee = true");
+  console.log("success =>", shouldOpenSuccess);
+  console.log("break_end =>", shouldOpenBreakEnd);
+  console.log("warning =>", shouldOpenWarning);
+  console.log(
+    "期待値: success と break_end は true、warning は false"
+  );
+});
+// ======================ここまでをコピペ=======================
+
+// テストケース11: freeeタブが既にある場合は前面化する
+// ===========================ここから====================
+runTest("freeeタブが既にある場合は前面化する", async () => {
+  const originalQuery = chrome.tabs.query;
+  const originalUpdate = chrome.tabs.update;
+  const originalWindowUpdate = chrome.windows.update;
+  const originalCreate = chrome.tabs.create;
+
+  try {
+    chrome.tabs.query = (queryInfo, callback) => {
+      console.log("tabs.query", queryInfo);
+      callback([
+        {
+          id: 321,
+          windowId: 654,
+          url: "https://p.secure.freee.co.jp/",
+        },
+      ]);
+    };
+
+    chrome.tabs.update = (tabId, updateProperties, callback) => {
+      console.log("tabs.update", { tabId, updateProperties });
+      if (callback) callback({ id: tabId, ...updateProperties });
+    };
+
+    chrome.windows.update = (windowId, updateInfo, callback) => {
+      console.log("windows.update", { windowId, updateInfo });
+      if (callback) callback({ id: windowId, ...updateInfo });
+    };
+
+    chrome.tabs.create = (createProperties, callback) => {
+      console.error("tabs.create should not be called", createProperties);
+      if (callback) callback(createProperties);
+    };
+
+    await notificationManager.openOrFocusFreeePage();
+    console.log(
+      "期待値: tabs.update と windows.update が呼ばれ、tabs.create は呼ばれない"
+    );
+  } finally {
+    chrome.tabs.query = originalQuery;
+    chrome.tabs.update = originalUpdate;
+    chrome.windows.update = originalWindowUpdate;
+    chrome.tabs.create = originalCreate;
+  }
+});
+// ======================ここまでをコピペ=======================
+
+// テストケース12: freeeタブがない場合は新規で開く
+// ===========================ここから====================
+runTest("freeeタブがない場合は新規で開く", async () => {
+  const originalQuery = chrome.tabs.query;
+  const originalUpdate = chrome.tabs.update;
+  const originalWindowUpdate = chrome.windows.update;
+  const originalCreate = chrome.tabs.create;
+
+  try {
+    chrome.tabs.query = (queryInfo, callback) => {
+      console.log("tabs.query", queryInfo);
+      callback([]);
+    };
+
+    chrome.tabs.update = (tabId, updateProperties, callback) => {
+      console.error("tabs.update should not be called", {
+        tabId,
+        updateProperties,
+      });
+      if (callback) callback({ id: tabId, ...updateProperties });
+    };
+
+    chrome.windows.update = (windowId, updateInfo, callback) => {
+      console.error("windows.update should not be called", {
+        windowId,
+        updateInfo,
+      });
+      if (callback) callback({ id: windowId, ...updateInfo });
+    };
+
+    chrome.tabs.create = (createProperties, callback) => {
+      console.log("tabs.create", createProperties);
+      if (callback) callback({ id: 999, ...createProperties });
+    };
+
+    await notificationManager.openOrFocusFreeePage();
+    console.log("期待値: tabs.create のみが呼ばれる");
+  } finally {
+    chrome.tabs.query = originalQuery;
+    chrome.tabs.update = originalUpdate;
+    chrome.windows.update = originalWindowUpdate;
+    chrome.tabs.create = originalCreate;
+  }
+});
+// ======================ここまでをコピペ=======================
+
 // 🧹 全アラーム解除ユーティリティ関数
 // ===========================ここから====================
 async function clearAllAlarmsAndNotifications() {

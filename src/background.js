@@ -429,7 +429,7 @@ class NotificationManager {
 
           if (overtimeMinutes > 0) {
             this.showNotification({
-              type: "basic",
+              type: "overtime",
               title: "超過勤務中",
               message: `${scheduledWorkHours}時間勤務を約${overtimeMinutes}分超過しています。`,
               iconUrl: chrome.runtime.getURL("icons/icon48.png"),
@@ -538,6 +538,64 @@ class NotificationManager {
     this.showNotification(options);
   }
 
+  async shouldAutoOpenFreee(notificationType) {
+    const settings = await new Promise((resolve) => {
+      chrome.storage.sync.get(
+        {
+          autoOpenFreee: false,
+          autoOpenOnCompletion: false,
+          autoOpenOnBreakEnd: false,
+          autoOpenOnOvertime: false,
+        },
+        resolve
+      );
+    });
+
+    if (settings.autoOpenFreee) {
+      return ["success", "completion", "break_end", "overtime"].includes(
+        notificationType
+      );
+    }
+
+    switch (notificationType) {
+      case "success":
+      case "completion":
+        return settings.autoOpenOnCompletion;
+      case "break_end":
+        return settings.autoOpenOnBreakEnd;
+      case "overtime":
+        return settings.autoOpenOnOvertime;
+      default:
+        return false;
+    }
+  }
+
+  async openOrFocusFreeePage() {
+    const freeeTabs = await new Promise((resolve) => {
+      chrome.tabs.query({ url: "https://p.secure.freee.co.jp/*" }, resolve);
+    });
+
+    if (freeeTabs.length > 0) {
+      const targetTab = freeeTabs[0];
+      await new Promise((resolve) => {
+        chrome.tabs.update(targetTab.id, { active: true }, () => resolve());
+      });
+      await new Promise((resolve) => {
+        chrome.windows.update(targetTab.windowId, { focused: true }, () =>
+          resolve()
+        );
+      });
+      return;
+    }
+
+    await new Promise((resolve) => {
+      chrome.tabs.create(
+        { url: "https://p.secure.freee.co.jp/", active: true },
+        () => resolve()
+      );
+    });
+  }
+
   // 通知を表示
   async showNotification(options) {
     try {
@@ -578,6 +636,9 @@ class NotificationManager {
 
       // 音声通知を再生
       await this.playNotificationSound(options.type);
+      if (await this.shouldAutoOpenFreee(options.type)) {
+        await this.openOrFocusFreeePage();
+      }
 
       // 通知の自動消去（通知タイプに応じて時間を調整）- requireInteractionがtrueの場合は自動消去しない
       if (!options.requireInteraction) {

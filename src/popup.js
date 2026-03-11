@@ -34,6 +34,9 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   const customOvertime = document.getElementById("custom-overtime");
   const enableSound = document.getElementById("enable-sound");
+  const autoOpenCompletion = document.getElementById("auto-open-completion");
+  const autoOpenBreakEnd = document.getElementById("auto-open-break-end");
+  const autoOpenOvertime = document.getElementById("auto-open-overtime");
 
   // 設定を読み込み
   loadSettings();
@@ -120,9 +123,75 @@ document.addEventListener("DOMContentLoaded", () => {
   customOvertime.addEventListener("input", saveSettings);
 
   enableSound.addEventListener("change", saveSettings);
+  autoOpenCompletion.addEventListener("change", saveSettings);
+  autoOpenBreakEnd.addEventListener("change", saveSettings);
+  autoOpenOvertime.addEventListener("change", saveSettings);
 
   // freeeページの状態をチェック
   checkFreeePageStatus();
+
+  function formatMinutes(totalMinutes) {
+    const safeMinutes = Math.max(0, Math.floor(totalMinutes || 0));
+    const hours = Math.floor(safeMinutes / 60);
+    const minutes = safeMinutes % 60;
+
+    if (hours === 0) {
+      return `${minutes}分`;
+    }
+
+    return `${hours}時間${minutes}分`;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function renderStatusMessage(workData, fallbackText) {
+    if (!workData) {
+      return `✅ ${escapeHtml(fallbackText)}`;
+    }
+
+    if (workData.status === "finished") {
+      const worked = formatMinutes(workData.actualWorkMinutes);
+      const breakTotal = formatMinutes(workData.totalBreakMinutes);
+      return `🏁 退勤済み<br><small>勤務: ${worked} / 休憩: ${breakTotal}</small>`;
+    }
+
+    if (workData.status === "before_work") {
+      return `⏰ ${escapeHtml(workData.message)}`;
+    }
+
+    if (workData.status === "on_break") {
+      const currentBreak = formatMinutes(workData.currentBreakMinutes);
+      const totalBreak = formatMinutes(workData.totalBreakMinutes);
+      return `☕ 休憩中<br><small>今の休憩: ${currentBreak}<br>合計休憩: ${totalBreak}</small>`;
+    }
+
+    if (workData.status === "completed") {
+      const worked = formatMinutes(workData.actualWorkMinutes);
+      const overtime = formatMinutes(workData.overtimeMinutes);
+      const breakTotal = formatMinutes(workData.totalBreakMinutes);
+      return `✅ 予定勤務は完了しています<br><small>勤務: ${worked} / 超過: ${overtime}<br>合計休憩: ${breakTotal} / 完了時刻: ${escapeHtml(
+        workData.completionTime || "-"
+      )}</small>`;
+    }
+
+    if (workData.status === "pending") {
+      const worked = formatMinutes(workData.actualWorkMinutes);
+      const remaining = formatMinutes(workData.remainingMinutes);
+      const breakTotal = formatMinutes(workData.totalBreakMinutes);
+      return `✅ あと ${remaining} 働けばOK<br><small>勤務時間合計: ${worked} / 合計休憩: ${breakTotal}<br>退勤目安: ${escapeHtml(
+        workData.completionTime || "-"
+      )}</small>`;
+    }
+
+    return `✅ ${escapeHtml(fallbackText)}`;
+  }
 
   // 設定を読み込む
   function loadSettings() {
@@ -139,6 +208,10 @@ document.addEventListener("DOMContentLoaded", () => {
         overtimeInterval: 30,
         customOvertime: 45,
         enableSound: true,
+        autoOpenFreee: false,
+        autoOpenOnCompletion: false,
+        autoOpenOnBreakEnd: false,
+        autoOpenOnOvertime: false,
       },
       (items) => {
         workHoursInput.value = items.workHours;
@@ -186,6 +259,12 @@ document.addEventListener("DOMContentLoaded", () => {
             : "none";
 
         enableSound.checked = items.enableSound;
+        autoOpenCompletion.checked =
+          items.autoOpenOnCompletion || items.autoOpenFreee;
+        autoOpenBreakEnd.checked =
+          items.autoOpenOnBreakEnd || items.autoOpenFreee;
+        autoOpenOvertime.checked =
+          items.autoOpenOnOvertime || items.autoOpenFreee;
       }
     );
   }
@@ -213,6 +292,9 @@ document.addEventListener("DOMContentLoaded", () => {
           : parseInt(overtimeInterval.value),
       customOvertime: parseInt(customOvertime.value) || 45,
       enableSound: enableSound.checked,
+      autoOpenOnCompletion: autoOpenCompletion.checked,
+      autoOpenOnBreakEnd: autoOpenBreakEnd.checked,
+      autoOpenOnOvertime: autoOpenOvertime.checked,
     };
 
     chrome.storage.sync.set(settings, () => {
@@ -247,35 +329,34 @@ document.addEventListener("DOMContentLoaded", () => {
               const workData = response.workData;
 
               if (workData && workData.status === "finished") {
-                // 退勤済みの表示
-                statusElement.innerHTML = `🏁 ${workData.message}`;
+                statusElement.innerHTML = renderStatusMessage(
+                  workData,
+                  response.workTime
+                );
                 statusElement.className = "status active";
               } else if (workData && workData.status === "before_work") {
-                // 出勤前の表示
-                statusElement.innerHTML = `⏰ ${workData.message}`;
+                statusElement.innerHTML = renderStatusMessage(
+                  workData,
+                  response.workTime
+                );
                 statusElement.className = "status inactive";
               } else if (workData && workData.status === "on_break") {
-                // 休憩中の表示
-                statusElement.innerHTML = `☕ ${workData.message.replace(
-                  /\n/g,
-                  "<br>"
-                )}<br><small>正確な時間は「修正」ボタンで更新してください。</small>`;
+                statusElement.innerHTML = `${renderStatusMessage(
+                  workData,
+                  response.workTime
+                )}<br><small>正確な時間を表示するには、freee の「修正」ボタンを押してください。</small>`;
                 statusElement.className = "status active";
               } else if (workData && workData.status === "completed") {
-                // 8時間勤務完了済み（超過勤務中）の表示
-                let detailInfo = `<small>${response.workTime.replace(
-                  /\n/g,
-                  "<br>"
-                )}</small>`;
-                statusElement.innerHTML = `✅ ${detailInfo}`;
+                statusElement.innerHTML = renderStatusMessage(
+                  workData,
+                  response.workTime
+                );
                 statusElement.className = "status active";
               } else {
-                // 勤務中（pending）の表示
-                let detailInfo = `<small>${response.workTime.replace(
-                  /\n/g,
-                  "<br>"
-                )}</small>`;
-                statusElement.innerHTML = `✅ 勤務中<br>${detailInfo}`;
+                statusElement.innerHTML = renderStatusMessage(
+                  workData,
+                  response.workTime
+                );
                 statusElement.className = "status active";
               }
             }

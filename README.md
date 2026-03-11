@@ -17,28 +17,77 @@ freee の勤怠データをもとに、勤務完了前・勤務完了時・休�
 
 ## ✨ できること
 
-- 🕘 **退勤前に 2 回通知**  
-  時間は変更できます。たとえば「10分前」と「1分前」を自由に調整できます。
-- 🎉 **勤務完了時に通知**  
-  予定勤務時間に達した時点で通知します。
-- ⏰ **超過勤務も通知**  
-  オプションで、勤務完了後も一定間隔で通知できます。
-- ☕ **休憩終了前と休憩終了時に通知**  
-  休憩開始時に時間を選ぶと、自動で通知します。
-- 📊 **複数回の休憩に対応**  
-  昼休みや離席など、複数回の休憩時間を合算して計算します。
-- 🔧 **勤務時間をカスタマイズ可能**  
-  8時間以外の勤務時間にも対応しています。
-- 🔔 **通知音の ON/OFF**  
-  通知にあわせて音を鳴らせます。
-- 👆 **通知クリックで freee に戻れる**
-- 🚪 **ケース別に freee を自動表示**  
-  勤務完了・休憩終了・超過勤務ごとに、freee を自動で開くか選べます。
-- 📌 **重要な通知は残る**  
-  勤務完了や休憩終了などの重要な通知は、反応するまで残ります。
-- 🔄 **毎日自動リセット / データ復元**  
-  前日の通知状態を引きずらず、同日内の再読み込みでは復元されます。
-- 🏁 **退勤済みの検出**
+<details>
+<summary><strong>🕘 退勤前に 2 回通知</strong></summary>
+
+時間は変更できます。たとえば「10分前」と「1分前」を自由に調整できます。
+</details>
+
+<details>
+<summary><strong>🎉 勤務完了時に通知</strong></summary>
+
+予定勤務時間に達した時点で通知します。
+</details>
+
+<details>
+<summary><strong>⏰ 超過勤務も通知</strong></summary>
+
+オプションで、勤務完了後も一定間隔で通知できます。
+</details>
+
+<details>
+<summary><strong>☕ 休憩終了前と休憩終了時に通知</strong></summary>
+
+休憩開始時に時間を選ぶと、自動で通知します。
+</details>
+
+<details>
+<summary><strong>📊 複数回の休憩に対応</strong></summary>
+
+昼休みや離席など、複数回の休憩時間を合算して計算します。
+</details>
+
+<details>
+<summary><strong>🔧 勤務時間をカスタマイズ可能</strong></summary>
+
+8時間以外の勤務時間にも対応しています。
+</details>
+
+<details>
+<summary><strong>🔔 通知音の ON/OFF</strong></summary>
+
+通知にあわせて音を鳴らせます。
+</details>
+
+<details>
+<summary><strong>👆 通知クリックで freee に戻れる</strong></summary>
+
+通知をクリックすると freee の勤怠ページに移動します。
+</details>
+
+<details>
+<summary><strong>🚪 ケース別に freee を自動表示</strong></summary>
+
+勤務完了・休憩終了・超過勤務ごとに、freee を自動で開くか選べます。
+</details>
+
+<details>
+<summary><strong>📌 重要な通知は残る</strong></summary>
+
+勤務完了や休憩終了などの重要な通知は、反応するまで残ります。
+</details>
+
+<details>
+<summary><strong>🔄 毎日自動リセット / データ復元</strong></summary>
+
+前日の通知状態を引きずらず、同日内の再読み込みでは復元されます。
+</details>
+
+<details>
+<summary><strong>🏁 退勤済みの検出</strong></summary>
+
+退勤記録が入っている日は、自動で退勤済みとして扱います。
+</details>
 
 ## 🎯 こんな人におすすめ
 

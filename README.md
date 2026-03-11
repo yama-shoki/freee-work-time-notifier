@@ -6,13 +6,13 @@
 freee の勤怠データをもとに、勤務完了前・勤務完了時・休憩終了前後を通知します。通知の内容やタイミングは拡張ポップアップから変更できます。
 
 <p align="center">
-  <img width="376" height="113" alt="スクリーンショット 2025-09-24 23 41 12" src="https://github.com/user-attachments/assets/3de27a2d-c543-430e-b6a1-fcbe1d58631f" />
+  <img width="344" height="100" alt="スクリーンショット 2026-03-11 16 20 13" src="https://github.com/user-attachments/assets/ebf99dab-686e-49e3-9a54-19f571399f28" />
 </p>
 
 ---
 
 <p align="center">
-  <img width="339" height="370" alt="スクリーンショット 2025-09-24 23 39 55" src="https://github.com/user-attachments/assets/e8a967be-a5a4-4f7c-a367-59b9d45007d9" />
+<img width="417" height="527" alt="スクリーンショット 2026-03-11 16 19 41" src="https://github.com/user-attachments/assets/f4641489-0494-4315-9555-c190753ff3a4" />
 </p>
 
 ## ✨ できること
